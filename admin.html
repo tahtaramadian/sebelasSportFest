@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Admin - Karang Taruna RW XI Bekasi Jaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+   
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+     <script src="api.js"></script>
+   
+    <style>
+        :root { --red: #DC2626; --red-dark: #B91C1C; }
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: #f8fafc; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 999px; }
+        .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .animate-in { animation: in .3s ease-out; }
+        @keyframes in { from { opacity:0; transform: translateY(8px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
+        .shadow-soft { box-shadow: 0 10px 30px -10px rgba(220,38,38,.25), 0 4px 12px -4px rgba(0,0,0,.08); }
+    </style>
+</head>
+<body class="antialiased text-slate-800">
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex">
+        <div class="hidden lg:flex w-1/2 relative bg-gradient-to-br from-red-700 via-red-600 to-red-500 overflow-hidden">
+            <div class="absolute inset-0">
+                <div class="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 w-80 h-80 bg-black/10 rounded-full blur-3xl"></div>
+                <svg class="absolute inset-0 w-full h-full opacity-[0.07]" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5"/>
+                    </pattern>
+                    <rect width="100" height="100" fill="url(#grid)"/>
+                </svg>
+            </div>
+            <div class="relative z-10 flex flex-col justify-between p-12 text-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-white text-red-600 grid place-items-center shadow-soft">
+                        <i class="fas fa-flag-checkered text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-xl leading-tight">Karang Taruna RW XI</h1>
+                        <p class="text-white/80 text-sm -mt-0.5">Bekasi Jaya</p>
+                    </div>
+                </div>
+                <div class="max-w-md">
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-xs font-semibold mb-4">Merah Putih • Semangat Pemuda</span>
+                    <h2 class="text-4xl font-extrabold leading-tight mb-4">Dashboard Admin<br/>Pekan Olahraga RW XI</h2>
+                    <p class="text-white/90 leading-relaxed">Kelola peserta, pertandingan 7 cabor, pengumuman, dan laporan real-time dalam satu platform modern.</p>
+                    <div class="mt-8 grid grid-cols-3 gap-3">
+                        <div class="bg-white/10 rounded-2xl p-4 border border-white/20"><div class="text-2xl font-bold">7</div><div class="text-xs text-white/80">Cabang Olahraga</div></div>
+                        <div class="bg-white/10 rounded-2xl p-4 border border-white/20"><div class="text-2xl font-bold">RT 01-14</div><div class="text-xs text-white/80">Terdaftar</div></div>
+                        <div class="bg-white/10 rounded-2xl p-4 border border-white/20"><div class="text-2xl font-bold">Live</div><div class="text-xs text-white/80">Update Skor</div></div>
+                    </div>
+                </div>
+                <div class="text-xs text-white/70">© 2025 Karang Taruna RW XI Bekasi Jaya. All rights reserved.</div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center p-6 lg:p-12 bg-white">
+            <div class="w-full max-w-md">
+                <div class="lg:hidden flex items-center gap-3 mb-8">
+                    <div class="w-11 h-11 rounded-2xl bg-red-600 text-white grid place-items-center shadow-soft"><i class="fas fa-flag-checkered text-xl"></i></div>
+                    <div><h1 class="font-extrabold text-lg leading-tight">Karang Taruna RW XI</h1><p class="text-slate-500 text-sm -mt-0.5">Bekasi Jaya</p></div>
+                </div>
+                <div class="mb-8"><h2 class="text-3xl font-extrabold tracking-tight">Masuk Admin</h2><p class="text-slate-500 mt-2">Gunakan akun panitia untuk mengelola dashboard.</p></div>
+                <form id="loginForm" class="space-y-5">
+                    <div><label class="text-sm font-semibold text-slate-700 mb-1.5 block">Username</label><div class="relative"><input id="loginUser" type="text" placeholder="admin" class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 bg-slate-50/50 transition" required /><i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i></div></div>
+                    <div><label class="text-sm font-semibold text-slate-700 mb-1.5 block">Password</label><div class="relative"><input id="loginPass" type="password" placeholder="••••••••" class="w-full pl-11 pr-12 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 bg-slate-50/50 transition" required /><i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><button type="button" id="togglePass" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl hover:bg-slate-100 text-slate-500"><i class="fas fa-eye"></i></button></div></div>
+                    <button type="submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 text-white font-bold shadow-soft hover:shadow-lg hover:from-red-700 hover:to-red-600 active:scale-[.98] transition flex items-center justify-center gap-2"><span>Masuk Dashboard</span><i class="fas fa-arrow-right"></i></button>
+                    <div class="text-center text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl p-3">Demo: <b>admin</b> / <b>admin123</b></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD (konten sama seperti sebelumnya, tapi dipersingkat) -->
+    <div id="dashboardScreen" class="hidden min-h-screen bg-[#f6f7fb]">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed left-0 top-0 h-full w-[280px] bg-white border-r border-slate-200 z-40 transition-transform -translate-x-full lg:translate-x-0 flex flex-col">
+            <div class="h-[72px] flex items-center gap-3 px-5 border-b border-slate-200">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-600 to-red-500 text-white grid place-items-center shadow-soft"><i class="fas fa-flag-checkered"></i></div>
+                <div><div class="font-extrabold leading-tight">Karang Taruna</div><div class="text-xs text-slate-500 -mt-0.5">RW XI Bekasi Jaya</div></div>
+            </div>
+            <nav class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
+                <button data-nav="dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-50 text-red-700"><i class="fas fa-tachometer-alt w-5"></i> Dashboard</button>
+                <button data-nav="pengumuman" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"><i class="fas fa-bullhorn w-5"></i> Pengumuman</button>
+                <button data-nav="peserta" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"><i class="fas fa-users w-5"></i> Peserta</button>
+                <button data-nav="pertandingan" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"><i class="fas fa-futbol w-5"></i> Pertandingan</button>
+                <button data-nav="pengaturan" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"><i class="fas fa-cog w-5"></i> Pengaturan</button>
+            </nav>
+            <div class="p-3 border-t border-slate-200">
+                <div class="bg-gradient-to-br from-red-600 to-red-500 rounded-2xl p-4 text-white shadow-soft">
+                    <div class="text-xs font-semibold opacity-90">Periode Kegiatan</div>
+                    <div id="periodLabel" class="text-sm font-bold mt-1">07 Juni - 31 Agustus 2026</div>
+                    <div class="mt-3 h-1.5 bg-white/20 rounded-full overflow-hidden"><div class="h-full w-[65%] bg-white rounded-full"></div></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="lg:pl-[280px] min-h-screen flex flex-col">
+            <header class="sticky top-0 z-30 bg-white/80 glass border-b border-slate-200">
+                <div class="h-[72px] px-4 lg:px-8 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <button id="toggleSidebar" class="lg:hidden p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50"><i class="fas fa-bars"></i></button>
+                        <div><h1 id="pageTitle" class="text-xl font-extrabold tracking-tight">Dashboard</h1><p class="text-xs text-slate-500 hidden sm:block">Selamat datang kembali, Admin</p></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btnQuickAdd" class="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 shadow-soft"><i class="fas fa-plus"></i> Buat Pengumuman</button>
+                        <div class="flex items-center gap-3 pl-2">
+                            <img src="https://i.pravatar.cc/40?img=12" class="w-10 h-10 rounded-2xl border-2 border-white shadow" alt="admin">
+                            <div class="hidden sm:block leading-tight"><div class="text-sm font-bold">Admin RW XI</div><div class="text-xs text-slate-500">Super Admin</div></div>
+                            <button id="btnLogout" class="p-2 rounded-xl hover:bg-slate-100 text-slate-500"><i class="fas fa-sign-out-alt"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 p-4 lg:p-8 space-y-8">
+                <!-- DASHBOARD VIEW -->
+                <section id="view-dashboard" class="view space-y-8 animate-in">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-3xl p-5 border border-slate-200"><div class="flex items-start justify-between"><div><div class="text-sm font-semibold text-slate-500">Total Peserta</div><div id="statPeserta" class="text-3xl font-extrabold mt-2">0</div></div><div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 grid place-items-center"><i class="fas fa-users text-xl"></i></div></div></div>
+                        <div class="bg-white rounded-3xl p-5 border border-slate-200"><div class="flex items-start justify-between"><div><div class="text-sm font-semibold text-slate-500">RT Terdaftar</div><div id="statRT" class="text-3xl font-extrabold mt-2">0</div></div><div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 grid place-items-center"><i class="fas fa-home text-xl"></i></div></div></div>
+                        <div class="bg-white rounded-3xl p-5 border border-slate-200"><div class="flex items-start justify-between"><div><div class="text-sm font-semibold text-slate-500">Cabang Olahraga</div><div class="text-3xl font-extrabold mt-2">7</div></div><div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center"><i class="fas fa-trophy text-xl"></i></div></div></div>
+                        <div class="bg-white rounded-3xl p-5 border border-slate-200"><div class="flex items-start justify-between"><div><div class="text-sm font-semibold text-slate-500">Jumlah Pertandingan</div><div id="statMatch" class="text-3xl font-extrabold mt-2">0</div></div><div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center"><i class="fas fa-futbol text-xl"></i></div></div></div>
+                    </div>
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <div class="xl:col-span-2 bg-white rounded-3xl border border-slate-200 p-6"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">Peserta per RT</h3><span class="text-xs px-2.5 py-1 rounded-full bg-slate-100 font-semibold">Live</span></div><div class="h-[280px]"><canvas id="chartRT"></canvas></div></div>
+                        <div class="bg-white rounded-3xl border border-slate-200 p-6"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg">Pengumuman Terbaru</h3><button data-nav="pengumuman" class="text-sm font-semibold text-red-600 hover:text-red-700">Lihat semua</button></div><div id="latestAnnouncements" class="space-y-3 max-h-[280px] overflow-y-auto scrollbar-thin pr-2"></div></div>
+                    </div>
+                    <div class="bg-white rounded-3xl border border-slate-200 p-6"><h3 class="font-bold text-lg mb-4">7 Cabang Olahraga</h3><div id="caborGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3"></div></div>
+                </section>
+
+                <!-- PENGUMUMAN VIEW -->
+                <section id="view-pengumuman" class="view hidden space-y-6 animate-in">
+                    <div class="flex justify-between items-center"><div><h2 class="text-2xl font-extrabold">Pengumuman</h2><p class="text-slate-500 text-sm">Buat dan kelola pengumuman untuk peserta.</p></div><button id="btnAddAnnouncement" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700"><i class="fas fa-plus"></i> Buat Pengumuman</button></div>
+                    <div id="announcementList" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+                </section>
+
+                <!-- PESERTA VIEW -->
+                <section id="view-peserta" class="view hidden space-y-6 animate-in">
+                    <div class="flex justify-between items-center"><div><h2 class="text-2xl font-extrabold">Kelola Peserta</h2><p class="text-slate-500 text-sm">Import, tambah, edit, dan hapus peserta.</p></div><div class="flex gap-2"><button id="btnImportPeserta" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-sm"><i class="fas fa-upload mr-1"></i> Import CSV</button><input type="file" id="fileImport" accept=".csv" class="hidden" /><button id="btnExportPeserta" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-sm"><i class="fas fa-download mr-1"></i> Export</button><button id="btnAddPeserta" class="px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm"><i class="fas fa-plus mr-1"></i> Tambah Peserta</button></div></div>
+                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-200 flex gap-3"><div class="relative flex-1"><input id="searchPeserta" type="text" placeholder="Cari nama, RT, cabor..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500" /><i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i></div><select id="filterRT" class="px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm"><option value="">Semua RT</option></select><select id="filterCabor" class="px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm"><option value="">Semua Cabor</option></select></div>
+                        <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-600 text-xs uppercase"><tr><th class="px-4 py-3">Nama</th><th class="px-4 py-3">RT</th><th class="px-4 py-3">Cabor</th><th class="px-4 py-3">No HP</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody id="pesertaTable"></tbody></table></div>
+                        <div id="pesertaEmpty" class="hidden p-12 text-center"><div class="w-16 h-16 mx-auto rounded-2xl bg-slate-100 grid place-items-center text-slate-400 mb-3"><i class="fas fa-users text-3xl"></i></div><p class="font-bold">Tidak ada peserta</p><p class="text-sm text-slate-500">Tambah peserta atau import CSV</p></div>
+                    </div>
+                </section>
+
+                <!-- PERTANDINGAN VIEW -->
+                <section id="view-pertandingan" class="view hidden space-y-6 animate-in">
+                    <div><h2 class="text-2xl font-extrabold">Pertandingan & Skor</h2><p class="text-slate-500 text-sm">Update skor real-time per cabang olahraga.</p></div>
+                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-2"><div id="caborTabs" class="flex flex-wrap gap-2 p-2"></div></div>
+                    <div id="matchList" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+                    <div id="matchEmpty" class="hidden bg-white rounded-3xl border border-slate-200 p-12 text-center"><p class="font-bold">Belum ada pertandingan</p><p class="text-sm text-slate-500">Data pertandingan diambil dari bagan</p></div>
+                </section>
+
+                <!-- PENGATURAN VIEW -->
+                <section id="view-pengaturan" class="view hidden space-y-6 animate-in">
+                    <h2 class="text-2xl font-extrabold">Pengaturan Website</h2>
+                    <div class="grid lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-3xl border border-slate-200 p-6"><div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg">Manajemen Admin</h3><button id="btnAddAdmin" class="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold">Tambah Admin</button></div><div id="adminList" class="space-y-2"></div></div>
+                        <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-6">
+                            <div><h3 class="font-bold text-lg mb-3">Tema Warna</h3><div class="grid grid-cols-3 gap-3"><button data-theme="red" class="theme-btn p-4 rounded-2xl border-2 border-red-600 bg-red-50 text-red-700 font-bold text-sm">Merah Putih</button><button data-theme="slate" class="theme-btn p-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-700 font-bold text-sm">Slate</button><button data-theme="emerald" class="theme-btn p-4 rounded-2xl border border-slate-300 bg-emerald-50 text-emerald-700 font-bold text-sm">Emerald</button></div></div>
+                            <div class="border-t pt-6"><h3 class="font-bold text-lg mb-3">Tanggal Kegiatan</h3><div class="grid grid-cols-2 gap-3"><div><label class="text-xs font-semibold text-slate-600 mb-1 block">Tanggal Mulai</label><input id="startDate" type="date" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:ring-4 focus:ring-red-100 focus:border-red-500 text-sm" /></div><div><label class="text-xs font-semibold text-slate-600 mb-1 block">Tanggal Selesai</label><input id="endDate" type="date" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:ring-4 focus:ring-red-100 focus:border-red-500 text-sm" /></div></div><button id="btnSaveDates" class="mt-4 w-full py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700">Simpan Tanggal</button></div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            <footer class="px-4 lg:px-8 py-6 text-center text-xs text-slate-500">© 2025 Karang Taruna RW XI Bekasi Jaya • Dibuat dengan semangat Merah Putih</footer>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="modalBackdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden"></div>
+    
+    <div id="modalAnnouncement" class="fixed inset-0 z-50 hidden place-items-center p-4"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg animate-in"><div class="p-6 border-b flex justify-between items-center"><h3 class="font-extrabold text-lg">Buat Pengumuman</h3><button data-close class="p-2 rounded-xl hover:bg-slate-100"><i class="fas fa-times"></i></button></div><form id="formAnnouncement" class="p-6 space-y-4"><div><label class="text-sm font-semibold">Judul</label><input name="judul" required class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500" /></div><div><label class="text-sm font-semibold">Isi Pengumuman</label><textarea name="isi" required rows="4" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500"></textarea></div><label class="flex items-center gap-2 text-sm"><input type="checkbox" name="penting" class="w-4 h-4 text-red-600 rounded" /> Tandai sebagai penting</label><div class="flex gap-2 pt-2"><button type="button" data-close class="flex-1 py-2.5 rounded-xl border border-slate-300 font-bold">Batal</button><button type="submit" class="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">Publikasikan</button></div></form></div></div>
+    
+    <div id="modalPeserta" class="fixed inset-0 z-50 hidden place-items-center p-4">
+   
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg animate-in">
+        <div class="p-6 border-b flex justify-between items-center">
+            <h3 id="pesertaModalTitle" class="font-extrabold text-lg">Tambah Peserta</h3>
+            <button data-close class="p-2 rounded-xl hover:bg-slate-100"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="formPeserta" class="p-6 space-y-4">
+            <input type="hidden" name="id" id="pesertaId" />
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2">
+                    <label class="text-sm font-semibold">Nama Lengkap</label>
+                    <input name="nama" id="pesertaNama" required class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500" />
+                </div>
+                <div>
+                    <label class="text-sm font-semibold">RT</label>
+                    <select name="rt" id="pesertaRT" required class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500"></select>
+                </div>
+                <div>
+                    <label class="text-sm font-semibold">Cabang Olahraga</label>
+                    <select name="cabor" id="pesertaCabor" required class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500"></select>
+                </div>
+                <div class="col-span-2">
+                    <label class="text-sm font-semibold">No HP</label>
+                    <input name="noHp" id="pesertaNoHp" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500" placeholder="08xxxxxxxxxx" />
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button type="button" data-close class="flex-1 py-2.5 rounded-xl border border-slate-300 font-bold">Batal</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+    <div id="modalEditMatch" class="fixed inset-0 z-50 hidden place-items-center p-4"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-in"><div class="p-6 border-b flex justify-between items-center"><h3 class="font-extrabold text-lg">Edit Skor Pertandingan</h3><button data-close class="p-2 rounded-xl hover:bg-slate-100"><i class="fas fa-times"></i></button></div><div class="p-6 space-y-4"><input type="hidden" id="editMatchId" /><input type="hidden" id="editMatchCabor" /><input type="hidden" id="editMatchTimA" /><input type="hidden" id="editMatchTimB" /><input type="hidden" id="editMatchRound" /><div class="grid grid-cols-2 gap-4"><div class="text-center"><label class="text-sm font-semibold block mb-2" id="labelTimA">Tim A</label><input type="number" id="editSkorA" min="0" class="w-full px-4 py-3 text-center text-2xl font-bold rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500" placeholder="0" /></div><div class="text-center"><label class="text-sm font-semibold block mb-2" id="labelTimB">Tim B</label><input type="number" id="editSkorB" min="0" class="w-full px-4 py-3 text-center text-2xl font-bold rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500" placeholder="0" /></div></div><div class="text-center text-xs text-slate-500 bg-slate-50 p-2 rounded-lg"><i class="fas fa-info-circle mr-1"></i> Masukkan skor untuk menentukan pemenang</div><div class="flex gap-2 pt-2"><button onclick="closeModals()" class="flex-1 py-2 rounded-xl border border-slate-300 font-bold">Batal</button><button onclick="saveEditMatch()" class="flex-1 py-2 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">Simpan Skor</button></div></div></div></div>
+    
+    <div id="modalEditPeserta" class="fixed inset-0 z-50 hidden place-items-center p-4"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-in"><div class="p-6 border-b flex justify-between items-center"><h3 class="font-extrabold text-lg">Edit Peserta</h3><button data-close class="p-2 rounded-xl hover:bg-slate-100"><i class="fas fa-times"></i></button></div><div class="p-6 space-y-4"><input type="hidden" id="editPesertaId" /><div><label class="text-sm font-semibold">Nama Lengkap</label><input type="text" id="editPesertaNama" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500" /></div><div class="grid grid-cols-2 gap-3"><div><label class="text-sm font-semibold">RT</label><select id="editPesertaRT" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-300"></select></div><div><label class="text-sm font-semibold">Cabang Olahraga</label><select id="editPesertaCabor" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-300"></select></div></div><div><label class="text-sm font-semibold">No HP</label><input type="text" id="editPesertaNoHp" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-300" /></div><div><label class="text-sm font-semibold">Status</label><select id="editPesertaStatus" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-300"><option value="Aktif">✅ Aktif</option><option value="Pending">⏳ Pending</option><option value="Cadang">🔄 Cadang</option></select></div><div class="flex gap-2 pt-2"><button onclick="closeModals()" class="flex-1 py-2 rounded-xl border border-slate-300 font-bold">Batal</button><button onclick="saveEditPeserta()" class="flex-1 py-2 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">Simpan</button></div></div></div></div>
+    
+    <div id="modalAdmin" class="fixed inset-0 z-50 hidden place-items-center p-4"><div class="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-in"><div class="p-6 border-b flex justify-between items-center"><h3 class="font-extrabold text-lg">Tambah Admin</h3><button data-close class="p-2 rounded-xl hover:bg-slate-100"><i class="fas fa-times"></i></button></div><form id="formAdmin" class="p-6 space-y-4"><div><label class="text-sm font-semibold">Username</label><input name="username" required class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500" /></div><div><label class="text-sm font-semibold">Password</label><input name="password" required type="password" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500" /></div><div class="flex gap-2 pt-2"><button type="button" data-close class="flex-1 py-2.5 rounded-xl border border-slate-300 font-bold">Batal</button><button type="submit" class="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">Simpan</button></div></form></div></div>
+    
+    <div id="toast" class="fixed bottom-6 right-6 z-[60] hidden"><div class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 min-w-[280px]"><div class="w-8 h-8 rounded-xl bg-white/10 grid place-items-center"><i class="fas fa-check"></i></div><div><div class="font-bold text-sm" id="toastTitle">Berhasil</div><div class="text-xs text-white/80" id="toastMsg">Data disimpan</div></div></div></div>
+    <!-- Modal Pengumuman -->
+<div id="modalAnnouncement" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-lg">
+        <h3 id="announcementModalTitle" class="text-xl font-bold mb-4">Buat Pengumuman Baru</h3>
+        <input type="hidden" id="editAnnouncementId">
+        
+        <div class="mb-3">
+            <label class="block text-sm font-semibold mb-1">Judul</label>
+            <input type="text" id="announcementJudul" class="w-full p-2 border rounded-lg" placeholder="Masukkan judul pengumuman">
+        </div>
+        
+        <div class="mb-3">
+            <label class="block text-sm font-semibold mb-1">Isi Pengumuman</label>
+            <textarea id="announcementIsi" rows="4" class="w-full p-2 border rounded-lg" placeholder="Detail pengumuman..."></textarea>
+        </div>
+        
+        <div class="mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="announcementPenting" class="w-4 h-4 text-red-600">
+                <span class="text-sm font-semibold">Tandai sebagai pengumuman penting</span>
+            </label>
+        </div>
+        
+        <div class="flex gap-3">
+            <button onclick="closeModals()" class="flex-1 py-2 border rounded-xl hover:bg-gray-50">Batal</button>
+            <button onclick="saveAnnouncement()" class="flex-1 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Match -->
+<div id="modalMatch" class="fixed inset-0 z-50 hidden place-items-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-in">
+        <div class="p-6 border-b flex justify-between items-center">
+            <h3 id="matchModalTitle" class="font-extrabold text-lg">Buat Pertandingan</h3>
+            <button data-close class="p-2 rounded-xl hover:bg-slate-100"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="p-6 space-y-4">
+            <input type="hidden" id="editMatchId">
+            
+            <div>
+                <label class="text-sm font-semibold">Cabang Olahraga</label>
+                <select id="matchCabor" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500">
+                    ${CABOR.map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-semibold">Tim A</label>
+                    <input type="text" id="matchTimA" placeholder="RT 01" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500">
+                </div>
+                <div>
+                    <label class="text-sm font-semibold">Tim B</label>
+                    <input type="text" id="matchTimB" placeholder="RT 02" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500">
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-sm font-semibold">Skor A</label>
+                    <input type="number" id="matchSkorA" min="0" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500">
+                </div>
+                <div>
+                    <label class="text-sm font-semibold">Skor B</label>
+                    <input type="number" id="matchSkorB" min="0" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500">
+                </div>
+            </div>
+            
+            <div>
+                <label class="text-sm font-semibold">Tanggal</label>
+                <input type="date" id="matchTanggal" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-4 focus:ring-red-100 focus:border-red-500">
+            </div>
+            
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeModals()" class="flex-1 py-2.5 rounded-xl border border-slate-300 font-bold">Batal</button>
+                <button onclick="saveMatch()" class="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>    
+    let chartRT = null;
+    let activeCabor = CABOR[0];
+    
+    // ==================== HELPER ====================
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+    const uid = () => Math.random().toString(36).slice(2,9);
+    const fmtDate = iso => new Date(iso).toLocaleDateString('id-ID',{day:'2-digit', month:'short', year:'numeric'});
+    
+    function toast(title, msg) {
+        $('#toastTitle').textContent = title;
+        $('#toastMsg').textContent = msg;
+        $('#toast').classList.remove('hidden');
+        setTimeout(() => $('#toast').classList.add('hidden'), 3000);
+    }
+    
+    // ==================== EKSTRAK MATCH (HANYA YANG BUKAN BY) ====================
+function extractMatchesFromBracket(brackets) {
+    const matches = [];
+    if (!brackets) return matches;
+    
+    const sportNames = {
+        futsal: 'Futsal', basket: 'Basket', voli: 'Voli',
+        badminton: 'Badminton', catur: 'Catur', esport: 'Esport', tenismeja: 'Tenis Meja'
+    };
+    
+    for (let sportId in brackets) {
+        const sport = brackets[sportId];
+        if (!sport) continue;
+        const caborName = sportNames[sportId] || sportId;
+        
+        const processMatches = (arr, roundName) => {
+            if (!arr) return;
+            arr.forEach(m => {
+                // SKIP jika tim A atau tim B adalah 'BY'
+                if (m.team1 === 'BY' || m.team2 === 'BY') {
+                    console.log(`⏭️ Skip match ${m.id} (${caborName}): mengandung BY`);
+                    return;
+                }
+                // Hanya tampilkan jika kedua tim terisi (tidak null)
+                if (m.team1 && m.team2 && m.team1 !== null && m.team2 !== null) {
+                    matches.push({
+                        id: m.id, 
+                        cabor: caborName, 
+                        timA: m.team1, 
+                        timB: m.team2,
+                        skorA: (m.score1 && m.score1 !== '-') ? m.score1 : null, 
+                        skorB: (m.score2 && m.score2 !== '-') ? m.score2 : null,
+                        status: m.done ? 'Selesai' : 'Terjadwal', 
+                        round: roundName
+                    });
+                }
+            });
+        };
+        
+        // Proses semua round di left bracket
+        if (sport.left) {
+            processMatches(sport.left.penyisihan, 'Penyisihan');
+            processMatches(sport.left.perempat, 'Perempat Final');
+            processMatches(sport.left.semifinal, 'Semi Final');
+        }
+        
+        // Proses semua round di right bracket
+        if (sport.right) {
+            processMatches(sport.right.penyisihan, 'Penyisihan');
+            processMatches(sport.right.perempat, 'Perempat Final');
+            processMatches(sport.right.semifinal, 'Semi Final');
+        }
+        
+        // Proses Final
+        if (sport.final && sport.final.team1 && sport.final.team2 && 
+            sport.final.team1 !== 'BY' && sport.final.team2 !== 'BY') {
+            matches.push({
+                id: sport.final.id, 
+                cabor: caborName, 
+                timA: sport.final.team1, 
+                timB: sport.final.team2,
+                skorA: (sport.final.score1 && sport.final.score1 !== '-') ? sport.final.score1 : null,
+                skorB: (sport.final.score2 && sport.final.score2 !== '-') ? sport.final.score2 : null,
+                status: sport.final.done ? 'Selesai' : 'Terjadwal', 
+                round: 'Final'
+            });
+        }
+        
+        // Proses Third Place
+        if (sport.thirdPlace && sport.thirdPlace.team1 && sport.thirdPlace.team2 &&
+            sport.thirdPlace.team1 !== 'BY' && sport.thirdPlace.team2 !== 'BY') {
+            matches.push({
+                id: sport.thirdPlace.id, 
+                cabor: caborName, 
+                timA: sport.thirdPlace.team1, 
+                timB: sport.thirdPlace.team2,
+                skorA: (sport.thirdPlace.score1 && sport.thirdPlace.score1 !== '-') ? sport.thirdPlace.score1 : null,
+                skorB: (sport.thirdPlace.score2 && sport.thirdPlace.score2 !== '-') ? sport.thirdPlace.score2 : null,
+                status: sport.thirdPlace.done ? 'Selesai' : 'Terjadwal', 
+                round: 'Perebutan Juara 3'
+            });
+        }
+    }
+    
+    console.log(`✅ Total matches (tanpa BY): ${matches.length}`);
+    return matches;
+}
+    
+    // ==================== FUNGSI UPDATE SKOR (LANGSUNG KE DATA.JS) ====================
+   async function updateMatchScoreToBracket(sportId, matchId, team1, team2, score1, score2) {
+    const brackets = await getBracketData();  // tambah await
+    const sport = brackets[sportId];
+    if (!sport) return false;
+    
+    let found = false;
+    
+    const updateInArray = (arr) => {
+        if (!arr) return false;
+        for (let i = 0; i < arr.length; i++) {
+            if (arr[i].id === matchId || (arr[i].team1 === team1 && arr[i].team2 === team2)) {
+                arr[i].score1 = score1 !== '' && score1 !== null ? String(score1) : '-';
+                arr[i].score2 = score2 !== '' && score2 !== null ? String(score2) : '-';
+                if (score1 !== '' && score2 !== '' && score1 !== null && score2 !== null) {
+                    const s1 = parseInt(score1), s2 = parseInt(score2);
+                    if (s1 > s2) { arr[i].winner = team1; arr[i].done = true; }
+                    else if (s2 > s1) { arr[i].winner = team2; arr[i].done = true; }
+                } else { arr[i].winner = null; arr[i].done = false; }
+                return true;
+            }
+        }
+        return false;
+    };
+    
+    if (sport.left) {
+        found = updateInArray(sport.left.penyisihan) || updateInArray(sport.left.perempat) || updateInArray(sport.left.semifinal);
+    }
+    if (!found && sport.right) {
+        found = updateInArray(sport.right.penyisihan) || updateInArray(sport.right.perempat) || updateInArray(sport.right.semifinal);
+    }
+    if (!found && sport.final && (sport.final.id === matchId || (sport.final.team1 === team1 && sport.final.team2 === team2))) {
+        sport.final.score1 = score1 !== '' ? String(score1) : '-';
+        sport.final.score2 = score2 !== '' ? String(score2) : '-';
+        if (score1 !== '' && score2 !== '') {
+            if (parseInt(score1) > parseInt(score2)) { sport.final.winner = team1; sport.final.done = true; }
+            else if (parseInt(score2) > parseInt(score1)) { sport.final.winner = team2; sport.final.done = true; }
+        }
+        found = true;
+    }
+    if (!found && sport.thirdPlace && (sport.thirdPlace.id === matchId || (sport.thirdPlace.team1 === team1 && sport.thirdPlace.team2 === team2))) {
+        sport.thirdPlace.score1 = score1 !== '' ? String(score1) : '-';
+        sport.thirdPlace.score2 = score2 !== '' ? String(score2) : '-';
+        if (score1 !== '' && score2 !== '') {
+            if (parseInt(score1) > parseInt(score2)) { sport.thirdPlace.winner = team1; sport.thirdPlace.done = true; }
+            else if (parseInt(score2) > parseInt(score1)) { sport.thirdPlace.winner = team2; sport.thirdPlace.done = true; }
+        }
+        found = true;
+    }
+    
+    if (found) {
+        await saveBracketData(brackets);  // tambah await
+        console.log('✅ Match updated:', sportId, matchId, score1, score2);
+        return true;
+    }
+    return false;
+}
+    
+    // ==================== EDIT PERTANDINGAN ====================
+    window.openEditMatchModal = function(matchId, cabor, timA, timB, skorA, skorB, round) {
+        $('#editMatchId').value = matchId;
+        $('#editMatchCabor').value = cabor;
+        $('#editMatchTimA').value = timA;
+        $('#editMatchTimB').value = timB;
+        $('#editMatchRound').value = round;
+        $('#editSkorA').value = skorA !== null && skorA !== '-' ? skorA : '';
+        $('#editSkorB').value = skorB !== null && skorB !== '-' ? skorB : '';
+        $('#labelTimA').textContent = timA;
+        $('#labelTimB').textContent = timB;
+        openModal('#modalEditMatch');
+    };
+    
+   // ==================== EDIT SKOR PERTANDINGAN ====================
+window.saveEditMatch = async function() {
+    const matchId = $('#editMatchId').value;
+    const cabor = $('#editMatchCabor').value;
+    const timA = $('#editMatchTimA').value;
+    const timB = $('#editMatchTimB').value;
+    const skorA = $('#editSkorA').value;
+    const skorB = $('#editSkorB').value;
+    
+    console.log('📝 Saving match:', { matchId, cabor, timA, timB, skorA, skorB });
+    
+    if (!matchId) {
+        toast('Error', 'ID Match tidak ditemukan');
+        return;
+    }
+    
+    try {
+        // Ambil data matches yang ada
+        let matches = await getMatches();
+        console.log('📋 Current matches:', matches);
+        
+        // Cari match berdasarkan ID
+        const matchIndex = matches.findIndex(m => m.id === matchId);
+        
+        if (matchIndex === -1) {
+            console.error('Match not found with ID:', matchId);
+            toast('Gagal', 'Match tidak ditemukan');
+            return;
+        }
+        
+        // Update skor
+        matches[matchIndex].skorA = skorA !== '' ? parseInt(skorA) : null;
+        matches[matchIndex].skorB = skorB !== '' ? parseInt(skorB) : null;
+        
+        // Update status otomatis
+        if (skorA !== '' && skorB !== '') {
+            matches[matchIndex].status = 'Selesai';
+        } else {
+            matches[matchIndex].status = 'Terjadwal';
+        }
+        
+        // Simpan kembali
+        await saveMatches(matches);
+        console.log('✅ Match updated:', matches[matchIndex]);
+        
+        // Tutup modal
+        closeModals();
+        
+        // Refresh tampilan
+        await renderMatches();
+        await initDashboard();
+        
+        toast('Berhasil', `Skor ${timA} vs ${timB} diperbarui`);
+        
+    } catch (error) {
+        console.error('Error saving match:', error);
+        toast('Gagal', 'Terjadi kesalahan: ' + error.message);
+    }
+};
+    
+    // ==================== EDIT PESERTA ====================
+    window.openEditPesertaModal = async function(id) {
+    try {
+        const pesertaList = await getParticipants();
+        const p = pesertaList.find(p => p.id == id);
+        if (!p) {
+            toast('Error', 'Data peserta tidak ditemukan');
+            return;
+        }
+        
+        // Isi form
+        document.getElementById('pesertaId').value = p.id;
+        document.getElementById('pesertaNama').value = p.name;
+        document.getElementById('pesertaRT').value = p.rt;
+        document.getElementById('pesertaCabor').value = p.sport;
+        document.getElementById('pesertaNoHp').value = p.noHp || '';
+        
+        // Set title
+        document.getElementById('pesertaModalTitle').textContent = 'Edit Peserta';
+        
+        // Buka modal
+        openModal('#modalPeserta');
+        
+    } catch (error) {
+        console.error('Error opening edit modal:', error);
+        toast('Error', 'Gagal membuka data peserta');
+    }
+};
+    
+   async function saveEditPeserta() {
+    const id = $('#editPesertaId').value;
+    const pesertaList = await getParticipants();
+    const index = pesertaList.findIndex(p => p.id == id);
+    if (index !== -1) {
+        pesertaList[index] = {
+            ...pesertaList[index],
+            name: $('#editPesertaNama').value,
+            rt: $('#editPesertaRT').value,
+            sport: $('#editPesertaCabor').value,
+            noHp: $('#editPesertaNoHp').value,
+            status: $('#editPesertaStatus').value
+        };
+        await saveParticipants(pesertaList);
+        closeModals();
+        await renderPeserta();
+        await initDashboard();
+        toast('Berhasil', 'Data peserta diperbarui');
+    }
+}
+    
+ window.deletePeserta = async function(id) {
+    if (confirm('Hapus peserta ini?')) {
+        try {
+            const pesertaList = await getParticipants();
+            const filtered = pesertaList.filter(p => p.id != id);
+            await saveParticipants(filtered);
+            await renderPeserta();
+            await initDashboard();
+            toast('Berhasil', 'Peserta dihapus');
+        } catch (error) {
+            console.error('Error deleting peserta:', error);
+            toast('Gagal', 'Terjadi kesalahan saat menghapus');
+        }
+    }
+};
+    
+   window.deleteAnnouncement = async function(id) {
+    if (confirm('Hapus pengumuman ini?')) {
+        const announcements = await getAnnouncements();  // tambah await
+        await saveAnnouncements(announcements.filter(a => a.id != id));  // tambah await
+        await renderAnnouncements();  // tambah await
+        await initDashboard();  // tambah await
+        window.dispatchEvent(new Event('storage'));
+        toast('Berhasil', 'Pengumuman dihapus');
+    }
+};
+
+    
+    // ==================== RENDER FUNCTIONS ====================
+    // Update renderDashboard untuk menampilkan pengumuman terbaru
+    async function renderDashboard() {
+    const peserta = await getParticipants();
+    const matches = await extractMatchesFromBracket(await getBracketData());
+    
+    $('#statPeserta').textContent = peserta.length;
+    $('#statRT').textContent = new Set(peserta.map(p => p.rt)).size || 14;
+    $('#statMatch').textContent = matches.length;
+    
+    const ctx = $('#chartRT').getContext('2d');
+    const counts = RT_LIST.map(rt => peserta.filter(p => p.rt === rt).length);
+    if (chartRT) chartRT.destroy();
+    chartRT = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: RT_LIST, datasets: [{ label: 'Peserta', data: counts, backgroundColor: '#DC2626', borderRadius: 12 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+    });
+    
+    const ann = await getAnnouncements();
+    const latestAnn = ann.slice(0, 3);
+    $('#latestAnnouncements').innerHTML = latestAnn.map(a => `
+        <div class="p-3 rounded-2xl border ${a.penting ? 'bg-red-50 border-red-200' : 'border-slate-200'}">
+            <div class="font-bold text-sm">${escapeHtml(a.judul)}</div>
+            <div class="text-xs text-slate-500 mt-1">${fmtDate(a.date)}</div>
+        </div>
+    `).join('') || '<p>Belum ada pengumuman</p>';
+    
+    $('#caborGrid').innerHTML = CABOR.map(c => `<div class="p-4 rounded-2xl border bg-white text-center"><div class="font-bold text-sm">${c}</div><div class="text-xs text-slate-500">${peserta.filter(p => p.sport === c).length} peserta</div></div>`).join('');
+}
+    
+   async function renderPeserta() {
+    const q = $('#searchPeserta')?.value.toLowerCase() || '';
+    const frt = $('#filterRT')?.value || '';
+    const fc = $('#filterCabor')?.value || '';
+    
+    // 🔥 WAJIB: gunakan await karena getParticipants() adalah async
+    let list = await getParticipants();
+    
+    if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.rt.toLowerCase().includes(q));
+    if (frt) list = list.filter(p => p.rt === frt);
+    if (fc) list = list.filter(p => p.sport === fc);
+    
+    const tbody = $('#pesertaTable');
+    if (tbody) {
+        tbody.innerHTML = list.map(p => `
+            <tr class="hover:bg-slate-50">
+                <td class="px-4 py-3 font-medium">${escapeHtml(p.name)}</td>
+                <td class="px-4 py-3"><span class="px-2 py-1 rounded-full bg-slate-100 text-xs font-bold">${p.rt}</span></td>
+                <td class="px-4 py-3">${p.sport}</td>
+                <td class="px-4 py-3">${p.noHp || '-'}</td>
+                <td class="px-4 py-3"><span class="px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs">${p.status || 'Aktif'}</span></td>
+                <td class="px-4 py-3">
+                    <button onclick="openEditPesertaModal('${p.id}')" class="text-blue-600 mr-2 hover:text-blue-800"><i class="fas fa-edit"></i></button>
+                    <button onclick="deletePeserta('${p.id}')" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+        $('#pesertaEmpty').classList.toggle('hidden', list.length > 0);
+    }
+}
+    
+    // ==================== RENDER PERTANDINGAN ====================
+async function renderMatches() {
+    console.log('🎮 Rendering matches for cabang:', activeCabor);
+    
+    const allMatches = await getMatches();
+    const matches = allMatches.filter(m => m.cabor === activeCabor);
+    
+    const container = $('#matchList');
+    if (!container) return;
+    
+    if (matches.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-8 text-slate-500">
+                <i class="fas fa-futbol text-4xl mb-2 opacity-50"></i>
+                <p>Belum ada pertandingan untuk cabang ${activeCabor}</p>
+                <button onclick="openAddMatchModal()" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
+                    <i class="fas fa-plus mr-1"></i> Buat Pertandingan
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = matches.map(m => `
+        <div class="bg-white rounded-2xl p-4 border shadow-sm hover:shadow-md transition">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs px-2 py-1 rounded-full ${getStatusBadge(m.status)} font-semibold">
+                    ${getStatusIcon(m.status)} ${m.status}
+                </span>
+                <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">${m.round || 'Babak'}</span>
+                <span class="text-xs text-slate-500"><i class="far fa-calendar-alt mr-1"></i>${m.tanggal || 'TBA'}</span>
+            </div>
+            <div class="flex justify-between items-center gap-4">
+                <div class="text-center flex-1">
+                    <div class="font-bold text-sm">${m.timA}</div>
+                    <div class="text-2xl font-black ${m.skorA !== null ? 'text-red-600' : 'text-slate-400'} mt-1">
+                        ${m.skorA !== null ? m.skorA : '-'}
+                    </div>
+                </div>
+                <div class="text-slate-400 font-bold text-lg">VS</div>
+                <div class="text-center flex-1">
+                    <div class="font-bold text-sm">${m.timB}</div>
+                    <div class="text-2xl font-black ${m.skorB !== null ? 'text-red-600' : 'text-slate-400'} mt-1">
+                        ${m.skorB !== null ? m.skorB : '-'}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-t flex gap-2">
+                <button onclick="openEditMatchModal('${m.id}', '${m.cabor}', '${m.timA}', '${m.timB}', ${m.skorA}, ${m.skorB})" 
+                        class="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition">
+                    <i class="fas fa-edit mr-1"></i> Edit Skor
+                </button>
+                <button onclick="deleteMatch('${m.id}')" 
+                        class="px-3 py-2 rounded-xl bg-red-100 text-red-600 hover:bg-red-200 font-bold text-sm transition">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getStatusBadge(status) {
+    switch(status) {
+        case 'Selesai': return 'bg-green-100 text-green-800';
+        case 'Berlangsung': return 'bg-yellow-100 text-yellow-800';
+        default: return 'bg-slate-100 text-slate-700';
+    }
+}
+
+function getStatusIcon(status) {
+    switch(status) {
+        case 'Selesai': return '🏆';
+        case 'Berlangsung': return '⚽';
+        default: return '📅';
+    }
+}
+
+// ==================== CRUD PERTANDINGAN ====================
+async function openAddMatchModal() {
+    document.getElementById('matchModalTitle').textContent = 'Buat Pertandingan Baru';
+    document.getElementById('formMatch').reset();
+    document.getElementById('editMatchId').value = '';
+    document.getElementById('matchCabor').value = activeCabor;
+    document.getElementById('matchTanggal').value = new Date().toISOString().slice(0, 10);
+    openModal('#modalMatch');
+}
+
+window.openEditMatchModal = function(id, cabor, timA, timB, skorA, skorB) {
+    console.log('🔓 Opening edit modal:', { id, cabor, timA, timB, skorA, skorB });
+    
+    $('#editMatchId').value = id;
+    $('#editMatchCabor').value = cabor;
+    $('#editMatchTimA').value = timA;
+    $('#editMatchTimB').value = timB;
+    $('#editSkorA').value = skorA !== null && skorA !== undefined ? skorA : '';
+    $('#editSkorB').value = skorB !== null && skorB !== undefined ? skorB : '';
+    $('#labelTimA').textContent = timA;
+    $('#labelTimB').textContent = timB;
+    
+    openModal('#modalEditMatch');
+};
+
+async function saveMatch() {
+    const id = document.getElementById('editMatchId').value;
+    const cabor = document.getElementById('matchCabor').value;
+    const timA = document.getElementById('matchTimA').value;
+    const timB = document.getElementById('matchTimB').value;
+    const skorA = document.getElementById('matchSkorA').value;
+    const skorB = document.getElementById('matchSkorB').value;
+    const tanggal = document.getElementById('matchTanggal').value;
+    
+    if (!timA || !timB) {
+        toast('Error', 'Tim A dan Tim B harus diisi');
+        return;
+    }
+    
+    const matches = await getMatches();
+    
+    if (id) {
+        // Update existing
+        const index = matches.findIndex(m => m.id === id);
+        if (index !== -1) {
+            matches[index].skorA = skorA ? parseInt(skorA) : null;
+            matches[index].skorB = skorB ? parseInt(skorB) : null;
+            matches[index].status = (skorA && skorB) ? 'Selesai' : 'Terjadwal';
+            matches[index].tanggal = tanggal;
+        }
+    } else {
+        // Add new
+        matches.push({
+            id: Date.now().toString(),
+            cabor: cabor,
+            timA: timA,
+            timB: timB,
+            skorA: skorA ? parseInt(skorA) : null,
+            skorB: skorB ? parseInt(skorB) : null,
+            status: (skorA && skorB) ? 'Selesai' : 'Terjadwal',
+            tanggal: tanggal,
+            round: 'Penyisihan'
+        });
+    }
+    
+    await saveMatches(matches);
+    closeModals();
+    await renderMatches();
+    await initDashboard();
+    toast('Berhasil', 'Data pertandingan disimpan');
+}
+
+async function deleteMatch(id) {
+    if (!confirm('Hapus pertandingan ini?')) return;
+    
+    const matches = await getMatches();
+    const filtered = matches.filter(m => m.id !== id);
+    await saveMatches(filtered);
+    await renderMatches();
+    await initDashboard();
+    toast('Berhasil', 'Pertandingan dihapus');
+}
+
+// Export ke window
+window.openAddMatchModal = openAddMatchModal;
+window.openEditMatchModal = openEditMatchModal;
+window.saveMatch = saveMatch;
+window.deleteMatch = deleteMatch;
+
+    // Helper escapeHtml jika belum ada
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+// Pastikan tombol buat pengumuman terhubung
+document.addEventListener('DOMContentLoaded', function() {
+    // ... kode existing ...
+    
+    // Hubungkan tombol buat pengumuman
+    const btnAddAnnouncement = document.getElementById('btnAddAnnouncement');
+    if (btnAddAnnouncement) {
+        btnAddAnnouncement.onclick = () => openAddAnnouncementModal();
+    }
+    
+    // Hubungkan tombol quick add
+    const btnQuickAdd = document.getElementById('btnQuickAdd');
+    if (btnQuickAdd) {
+        btnQuickAdd.onclick = () => openAddAnnouncementModal();
+    }
+});
+
+$('#btnAddMatch')?.addEventListener('click', () => {
+    openAddMatchModal();
+});
+
+    ///ANOUNCEMENTS
+    // ==================== PENGUMUMAN (TAMBAHKAN INI) ====================
+
+// Fungsi untuk membuka modal tambah pengumuman
+window.openAddAnnouncementModal = function() {
+    // Reset form
+    document.getElementById('announcementModalTitle').innerText = 'Buat Pengumuman Baru';
+    document.getElementById('editAnnouncementId').value = '';
+    document.getElementById('announcementJudul').value = '';
+    document.getElementById('announcementIsi').value = '';
+    document.getElementById('announcementPenting').checked = false;
+    openModal('#modalAnnouncement');
+};
+
+// Fungsi untuk edit pengumuman
+window.editAnnouncement = function(id) {
+    const announcements = getAnnouncements();
+    const a = announcements.find(x => x.id == id);
+    if (!a) return;
+    
+    document.getElementById('announcementModalTitle').innerText = 'Edit Pengumuman';
+    document.getElementById('editAnnouncementId').value = a.id;
+    document.getElementById('announcementJudul').value = a.judul;
+    document.getElementById('announcementIsi').value = a.isi;
+    document.getElementById('announcementPenting').checked = a.penting || false;
+    openModal('#modalAnnouncement');
+};
+
+// Fungsi untuk menyimpan pengumuman
+window.saveAnnouncement = async function() {
+    const id = document.getElementById('editAnnouncementId').value;
+    const judul = document.getElementById('announcementJudul').value.trim();
+    const isi = document.getElementById('announcementIsi').value.trim();
+    const penting = document.getElementById('announcementPenting').checked;
+    
+    if (!judul || !isi) {
+        alert('Judul dan isi pengumuman harus diisi!');
+        return;
+    }
+    
+    const announcements = await getAnnouncements();  // tambah await
+    
+    if (id) {
+        const index = announcements.findIndex(a => a.id == id);
+        if (index !== -1) {
+            announcements[index] = {
+                ...announcements[index],
+                judul: judul,
+                isi: isi,
+                penting: penting,
+                date: new Date().toISOString()
+            };
+        }
+    } else {
+        announcements.unshift({
+            id: Date.now().toString(),
+            judul: judul,
+            isi: isi,
+            penting: penting,
+            date: new Date().toISOString()
+        });
+    }
+    
+    await saveAnnouncements(announcements);  // tambah await
+    closeModals();
+    await renderAnnouncements();  // tambah await
+    await initDashboard();  // tambah await
+    
+    window.dispatchEvent(new Event('storage'));
+    toast('Berhasil', 'Pengumuman berhasil disimpan!');
+};
+    
+    // Update renderAnnouncements agar menampilkan tombol edit
+  async function renderAnnouncements() {
+    const list = await getAnnouncements();  // tambah await
+    const container = $('#announcementList');
+    if (container) {
+        if (list.length === 0) {
+            container.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500">Belum ada pengumuman</div>';
+            return;
+        }
+        container.innerHTML = list.map(a => `
+            <div class="bg-white rounded-2xl p-4 border ${a.penting ? 'border-l-4 border-l-red-600' : ''} shadow-sm">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="font-bold text-lg">${escapeHtml(a.judul)}</h3>
+                            ${a.penting ? '<span class="text-xs bg-red-600 text-white px-2 py-0.5 rounded">PENTING</span>' : ''}
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">${escapeHtml(a.isi)}</p>
+                        <div class="text-xs text-gray-400">
+                            <i class="far fa-calendar-alt mr-1"></i>${fmtDate(a.date || a.tanggal)}
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editAnnouncement('${a.id}')" class="text-blue-600 hover:text-blue-800 p-1">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteAnnouncement('${a.id}')" class="text-red-600 hover:text-red-800 p-1">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+// ==================== ADMIN ====================
+async function getAdmins() {
+    try {
+        const result = await callAPI('get', 'Admins');
+        console.log('getAdmins result:', result);
+        
+        // Pastikan result adalah array
+        if (Array.isArray(result)) {
+            if (result.length === 0) {
+                // Return default admin jika kosong
+                return [{ username: 'admin', password: 'admin123' }];
+            }
+            return result;
+        }
+        
+        // Jika result adalah object, konversi ke array
+        if (result && typeof result === 'object') {
+            return [result];
+        }
+        
+        // Default
+        return [{ username: 'admin', password: 'admin123' }];
+    } catch (error) {
+        console.error('Error getting admins:', error);
+        return [{ username: 'admin', password: 'admin123' }];
+    }
+}
+
+async function saveAdmins(admins) {
+    if (!Array.isArray(admins)) {
+        console.error('saveAdmins: admins is not an array', admins);
+        return false;
+    }
+    return await callAPI('save', 'Admins', admins);
+}
+
+async function saveAdmins(admins) {
+    if (!Array.isArray(admins)) {
+        console.error('saveAdmins: admins is not an array', admins);
+        return false;
+    }
+    return await callAPI('save', 'Admins', admins);
+}
+    
+  window.deleteAdmin = async function(username) {
+    if (confirm('Hapus admin?')) {
+        try {
+            const admins = await getAdmins();
+            if (!Array.isArray(admins)) {
+                console.error('Admins is not an array');
+                return;
+            }
+            const filtered = admins.filter(a => a.username !== username);
+            await saveAdmins(filtered);
+            await renderAdmins();
+            toast('Berhasil', 'Admin dihapus');
+        } catch (error) {
+            console.error('Error deleting admin:', error);
+            toast('Gagal', 'Terjadi kesalahan');
+        }
+    }
+};
+
+    async function renderAdmins() {
+    try {
+        const list = await getAdmins();
+        console.log('renderAdmins list:', list);
+        
+        // Pastikan list adalah array
+        if (!Array.isArray(list)) {
+            console.error('Admins list is not an array:', list);
+            return;
+        }
+        
+        const container = $('#adminList');
+        if (container) {
+            if (list.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-gray-500">Belum ada admin</div>';
+                return;
+            }
+            
+            container.innerHTML = list.map((a, i) => `
+                <div class="flex justify-between items-center p-3 border rounded-xl">
+                    <div>
+                        <span class="font-bold">${a.username}</span>
+                        ${i === 0 ? ' <span class="text-xs bg-slate-100 px-2 py-0.5 rounded">Super Admin</span>' : ''}
+                    </div>
+                    ${i > 0 ? `<button onclick="deleteAdmin('${a.username}')" class="text-red-600 text-sm"><i class="fas fa-trash"></i> Hapus</button>` : ''}
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error in renderAdmins:', error);
+    }
+}
+    
+    function loadSettings() {
+        const s = getSettings();
+        if ($('#startDate')) $('#startDate').value = s.startDate || '';
+        if ($('#endDate')) $('#endDate').value = s.endDate || '';
+        if ($('#periodLabel')) $('#periodLabel').textContent = s.startDate && s.endDate ? `${fmtDate(s.startDate)} - ${fmtDate(s.endDate)}` : '-';
+    }
+    
+  async function initDashboard() {
+    await renderDashboard();
+    await renderPeserta();
+    await renderMatches();
+    await renderAnnouncements();
+    renderAdmins(); // jika sync
+    loadSettings(); // jika sync
+}
+    
+    async function renderCaborTabs() {
+    // Data CABOR sudah sync, tidak perlu await
+    $('#caborTabs').innerHTML = CABOR.map(c => `<button data-cabor="${c}" class="px-4 py-2 rounded-xl text-sm font-bold border ${c === activeCabor ? 'bg-red-600 text-white border-red-600' : 'bg-white border-slate-300 hover:bg-slate-50'}">${c}</button>`).join('');
+    $$('#caborTabs button').forEach(b => b.onclick = async () => { 
+        activeCabor = b.dataset.cabor; 
+        await renderCaborTabs(); 
+        await renderMatches(); 
+    });
+}
+    
+    function fillSelects() {
+    // Untuk form tambah/edit peserta
+    const rtSelect = document.getElementById('pesertaRT');
+    if (rtSelect) {
+        rtSelect.innerHTML = RT_LIST.map(r => `<option value="${r}">${r}</option>`).join('');
+    }
+    
+    const caborSelect = document.getElementById('pesertaCabor');
+    if (caborSelect) {
+        caborSelect.innerHTML = CABOR.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    
+    // Untuk filter di tabel peserta
+    const filterRT = document.getElementById('filterRT');
+    if (filterRT) {
+        filterRT.innerHTML = '<option value="">Semua RT</option>' + RT_LIST.map(r => `<option>${r}</option>`).join('');
+    }
+    
+    const filterCabor = document.getElementById('filterCabor');
+    if (filterCabor) {
+        filterCabor.innerHTML = '<option value="">Semua Cabor</option>' + CABOR.map(c => `<option>${c}</option>`).join('');
+    }
+    
+    // Untuk modal edit peserta
+    const editRT = document.getElementById('editPesertaRT');
+    if (editRT) {
+        editRT.innerHTML = RT_LIST.map(r => `<option>${r}</option>`).join('');
+    }
+    
+    const editCabor = document.getElementById('editPesertaCabor');
+    if (editCabor) {
+        editCabor.innerHTML = CABOR.map(c => `<option>${c}</option>`).join('');
+    }
+}
+
+
+    
+    // ==================== EVENT LISTENERS ====================
+    $('#togglePass')?.addEventListener('click', () => { const i = $('#loginPass'); if (i) i.type = i.type === 'password' ? 'text' : 'password'; });
+    
+ $('#loginForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const u = $('#loginUser').value.trim();
+    const p = $('#loginPass').value.trim();
+    
+    try {
+        const admins = await getAdmins();
+        console.log('Admins for login:', admins);
+        
+        // Pastikan admins adalah array
+        if (!Array.isArray(admins)) {
+            console.error('Admins is not an array:', admins);
+            toast('Error', 'Data admin error');
+            return;
+        }
+        
+        const found = admins.find(a => a.username === u && a.password === p);
+        
+        if (found) {
+            localStorage.setItem('kt_session', u);
+            $('#loginScreen').classList.add('hidden');
+            $('#dashboardScreen').classList.remove('hidden');
+            renderCaborTabs();
+            initDashboard();
+        } else {
+            toast('Gagal', 'Username atau password salah');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        toast('Error', 'Terjadi kesalahan');
+    }
+});
+    
+    $('#btnLogout')?.addEventListener('click', () => { localStorage.removeItem('kt_session'); location.reload(); });
+    
+    function switchView(name) {
+        $$('.view').forEach(v => v.classList.add('hidden'));
+        $(`#view-${name}`).classList.remove('hidden');
+        $('#pageTitle').textContent = { dashboard: 'Dashboard', pengumuman: 'Pengumuman', peserta: 'Peserta', pertandingan: 'Pertandingan', pengaturan: 'Pengaturan' }[name];
+        $$('.nav-btn').forEach(b => {
+            b.classList.toggle('bg-red-50', b.dataset.nav === name);
+            b.classList.toggle('text-red-700', b.dataset.nav === name);
+        });
+        if (window.innerWidth < 1024) $('#sidebar').classList.add('-translate-x-full');
+    }
+    
+    $$('.nav-btn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.nav)));
+    $('#toggleSidebar')?.addEventListener('click', () => $('#sidebar').classList.toggle('-translate-x-full'));
+    
+    const backdrop = $('#modalBackdrop');
+    window.openModal = function(id) { backdrop.classList.remove('hidden'); $(id).classList.remove('hidden'); $(id).classList.add('grid'); };
+    window.closeModals = function() { backdrop.classList.add('hidden'); $$('[id^="modal"]').forEach(m => { m.classList.add('hidden'); m.classList.remove('grid'); }); };
+    backdrop?.addEventListener('click', closeModals);
+    $$('[data-close]').forEach(b => b.addEventListener('click', closeModals));
+    
+    // Tombol tambah peserta
+const btnAddPeserta = document.getElementById('btnAddPeserta');
+if (btnAddPeserta) {
+    btnAddPeserta.addEventListener('click', () => {
+        // Reset form
+        document.getElementById('pesertaId').value = '';
+        document.getElementById('pesertaNama').value = '';
+        document.getElementById('pesertaRT').value = '';
+        document.getElementById('pesertaCabor').value = '';
+        document.getElementById('pesertaNoHp').value = '';
+        
+        // Set title
+        document.getElementById('pesertaModalTitle').textContent = 'Tambah Peserta';
+        
+        // Buka modal
+        openModal('#modalPeserta');
+    });
+}
+    
+    // Event listener untuk form peserta
+const formPeserta = document.getElementById('formPeserta');
+if (formPeserta) {
+    formPeserta.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        try {
+            // Ambil data dari form
+            const id = document.getElementById('pesertaId').value;
+            const name = document.getElementById('pesertaNama').value.trim();
+            const rt = document.getElementById('pesertaRT').value;
+            const cabor = document.getElementById('pesertaCabor').value;
+            const noHp = document.getElementById('pesertaNoHp').value;
+            
+            // Validasi
+            if (!name) {
+                toast('Gagal', 'Nama peserta harus diisi');
+                return;
+            }
+            if (!rt) {
+                toast('Gagal', 'RT harus dipilih');
+                return;
+            }
+            if (!cabor) {
+                toast('Gagal', 'Cabang olahraga harus dipilih');
+                return;
+            }
+            
+            console.log('Menyimpan peserta:', { id, name, rt, cabor, noHp });
+            
+            // Ambil data peserta yang sudah ada
+            let pesertaList = await getParticipants();
+            if (!Array.isArray(pesertaList)) {
+                pesertaList = [];
+            }
+            
+            // Buat objek peserta baru
+            const newPeserta = {
+                id: id || Date.now().toString(),
+                name: name,
+                rt: rt,
+                sport: cabor,
+                noHp: noHp,
+                status: 'Aktif'
+            };
+            
+            // Cek apakah edit atau tambah
+            const existingIndex = pesertaList.findIndex(p => p.id == id);
+            if (existingIndex >= 0) {
+                pesertaList[existingIndex] = newPeserta;
+                console.log('Update peserta:', newPeserta);
+            } else {
+                pesertaList.push(newPeserta);
+                console.log('Tambah peserta baru:', newPeserta);
+            }
+            
+            // Simpan ke API
+            const saveResult = await saveParticipants(pesertaList);
+            console.log('Hasil simpan:', saveResult);
+            
+            // Reset form
+            document.getElementById('pesertaId').value = '';
+            document.getElementById('pesertaNama').value = '';
+            document.getElementById('pesertaRT').value = '';
+            document.getElementById('pesertaCabor').value = '';
+            document.getElementById('pesertaNoHp').value = '';
+            
+            // Tutup modal
+            closeModals();
+            
+            // Refresh tampilan
+            await renderPeserta();
+            await initDashboard();
+            
+            toast('Berhasil', 'Data peserta berhasil disimpan');
+            
+        } catch (error) {
+            console.error('Error saving peserta:', error);
+            toast('Gagal', 'Terjadi kesalahan: ' + error.message);
+        }
+    });
+}
+    $('#formAnnouncement')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const announcements = getAnnouncements();
+        announcements.unshift({ id: uid(), judul: fd.get('judul'), isi: fd.get('isi'), penting: fd.get('penting') === 'on', date: new Date().toISOString() });
+        saveAnnouncements(announcements);
+        e.target.reset();
+        closeModals();
+        renderAnnouncements();
+        initDashboard();
+        toast('Berhasil', 'Pengumuman dipublikasikan');
+    });
+    
+    $('#btnAddAnnouncement')?.addEventListener('click', () => openModal('#modalAnnouncement'));
+    $('#btnQuickAdd')?.addEventListener('click', () => openModal('#modalAnnouncement'));
+    $('#btnAddAdmin')?.addEventListener('click', () => openModal('#modalAdmin'));
+    
+    $('#formAdmin')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const admins = getAdmins();
+        if (admins.find(a => a.username === fd.get('username'))) { toast('Gagal', 'Username sudah ada'); return; }
+        admins.push({ username: fd.get('username'), password: fd.get('password') });
+        saveAdmins(admins);
+        e.target.reset();
+        closeModals();
+        renderAdmins();
+        toast('Berhasil', 'Admin ditambahkan');
+    });
+    
+    $('#btnSaveDates')?.addEventListener('click', () => {
+        const settings = getSettings();
+        settings.startDate = $('#startDate').value;
+        settings.endDate = $('#endDate').value;
+        saveSettings(settings);
+        loadSettings();
+        toast('Tersimpan', 'Tanggal kegiatan diperbarui');
+    });
+    
+    $$('.theme-btn').forEach(b => b.addEventListener('click', () => {
+        const settings = getSettings();
+        settings.theme = b.dataset.theme;
+        saveSettings(settings);
+        toast('Tema', 'Tema diperbarui');
+    }));
+    
+    // ==================== IMPORT CSV ====================
+$('#btnImportPeserta')?.addEventListener('click', () => {
+    $('#fileImport').click();
+});
+
+$('#fileImport')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.csv')) {
+        toast('Error', 'Hanya file CSV yang didukung!');
+        e.target.value = '';
+        return;
+    }
+    
+    toast('Info', 'Sedang mengimpor data...');
+    
+    const reader = new FileReader();
+    
+    reader.onload = async function(event) {
+        try {
+            const content = event.target.result;
+            const lines = content.split(/\r?\n/).filter(line => line.trim());
+            
+            if (lines.length < 2) {
+                toast('Error', 'File CSV kosong');
+                return;
+            }
+            
+            // Parse header
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            
+            // Cari index kolom yang diperlukan
+            const nameIdx = headers.findIndex(h => h === 'name' || h === 'nama');
+            const rtIdx = headers.findIndex(h => h === 'rt');
+            const sportIdx = headers.findIndex(h => h === 'sport' || h === 'cabor');
+            const noHpIdx = headers.findIndex(h => h === 'nohp' || h === 'no hp' || h === 'phone');
+            const statusIdx = headers.findIndex(h => h === 'status');
+            
+            if (nameIdx === -1 || rtIdx === -1 || sportIdx === -1) {
+                toast('Error', 'Format CSV salah! Kolom wajib: name/nama, rt, sport/cabor');
+                return;
+            }
+            
+            // Ambil data peserta yang sudah ada (PASTIKAN ARRAY)
+            let existingParticipants = await getParticipants();
+            
+            // Pastikan existingParticipants adalah array
+            if (!Array.isArray(existingParticipants)) {
+                console.log('Existing participants bukan array, membuat array baru');
+                existingParticipants = [];
+            }
+            
+            // Buat Map untuk cek duplikat
+            const existingMap = new Map();
+            existingParticipants.forEach(p => {
+                const key = `${p.name}|${p.rt}|${p.sport}`;
+                existingMap.set(key, p);
+            });
+            
+            let addedCount = 0;
+            let errorCount = 0;
+            
+            // Proses setiap baris
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                
+                if (values.length < 3) {
+                    errorCount++;
+                    continue;
+                }
+                
+                const name = values[nameIdx];
+                const rt = values[rtIdx];
+                const sport = values[sportIdx];
+                const noHp = noHpIdx !== -1 ? values[noHpIdx] : '';
+                const status = statusIdx !== -1 ? values[statusIdx] : 'Aktif';
+                
+                if (!name || !rt || !sport) {
+                    errorCount++;
+                    continue;
+                }
+                
+                // Format RT
+                let formattedRT = rt;
+                if (!rt.toUpperCase().includes('RT')) {
+                    const rtNumber = rt.match(/\d+/);
+                    if (rtNumber) {
+                        formattedRT = `RT ${rtNumber[0].padStart(2, '0')}`;
+                    }
+                } else {
+                    formattedRT = rt.toUpperCase().replace(/\s+/, ' ');
+                }
+                
+                const key = `${name}|${formattedRT}|${sport}`;
+                
+                if (!existingMap.has(key)) {
+                    const newPeserta = {
+                        id: Date.now().toString() + i + Math.random(),
+                        name: name,
+                        rt: formattedRT,
+                        sport: sport,
+                        noHp: noHp,
+                        status: status === 'Aktif' || status === 'active' ? 'Aktif' : 'Pending'
+                    };
+                    existingMap.set(key, newPeserta);
+                    addedCount++;
+                }
+            }
+            
+            // Konversi Map kembali ke array
+            const finalParticipants = Array.from(existingMap.values());
+            
+            // Simpan ke API
+            await saveParticipants(finalParticipants);
+            
+            // Refresh tampilan
+            await renderPeserta();
+            await initDashboard();
+            
+            toast('Berhasil', `Import selesai! ${addedCount} peserta ditambahkan. Total: ${finalParticipants.length} peserta`);
+            
+        } catch (err) {
+            console.error('Import error:', err);
+            toast('Gagal', 'Terjadi kesalahan saat import: ' + err.message);
+        }
+    };
+    
+    reader.onerror = () => {
+        toast('Gagal', 'Gagal membaca file');
+    };
+    
+    reader.readAsText(file, 'UTF-8');
+    e.target.value = '';
+});
+    
+    // ==================== EXPORT CSV ====================
+$('#btnExportPeserta')?.addEventListener('click', async () => {
+    try {
+        toast('Info', 'Menyiapkan data export...');
+        
+        // Ambil data peserta (await karena async)
+        const list = await getParticipants();
+        
+        if (!list || list.length === 0) {
+            toast('Error', 'Tidak ada data peserta untuk di-export');
+            return;
+        }
+        
+        // Buat header CSV
+        const headers = ['name', 'rt', 'sport', 'noHp', 'status'];
+        
+        // Buat baris data
+        const rows = list.map(p => [
+            `"${p.name}"`,  // pakai kutip untuk hindari koma
+            p.rt,
+            p.sport,
+            p.noHp || '',
+            p.status || 'Aktif'
+        ].join(','));
+        
+        // Gabungkan header dan rows
+        const csv = [headers.join(','), ...rows].join('\n');
+        
+        // Tambahkan BOM untuk UTF-8 (supaya karakter khusus terbaca)
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        
+        // Download file
+        const a = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.download = `peserta_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast('Berhasil', `${list.length} peserta berhasil di-export`);
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        toast('Gagal', 'Terjadi kesalahan saat export');
+    }
+});
+    
+    $('#searchPeserta')?.addEventListener('input', renderPeserta);
+    $('#filterRT')?.addEventListener('change', renderPeserta);
+    $('#filterCabor')?.addEventListener('change', renderPeserta);
+    
+    fillSelects();
+    
+    // ==================== AUTO LOGIN ====================
+    if (localStorage.getItem('kt_session')) {
+        $('#loginScreen').classList.add('hidden');
+        $('#dashboardScreen').classList.remove('hidden');
+        renderCaborTabs();
+        initDashboard();
+    }
+    
+    document.addEventListener('click', e => {
+        const sb = $('#sidebar');
+        if (window.innerWidth >= 1024) return;
+        if (sb && !sb.contains(e.target) && !$('#toggleSidebar')?.contains(e.target) && !sb.classList.contains('-translate-x-full')) {
+            sb.classList.add('-translate-x-full');
+        }
+    });
+    </script>
+</body>
+</html>
