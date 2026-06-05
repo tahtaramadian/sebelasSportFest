@@ -1841,201 +1841,533 @@ function backToSports() {
 // ============================
 // PARTICIPANTS
 // ============================
-function populateFilters() {
-    const rtSelect = document.getElementById('filterRT');
-    RT_LIST.forEach(rt => {
-        const opt = document.createElement('option');
-        opt.value = rt; opt.textContent = rt;
-        rtSelect.appendChild(opt);
-    });
-    const sportSelect = document.getElementById('filterSport');
-    SPORTS.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.name; opt.textContent = s.name;
-        sportSelect.appendChild(opt);
-    });
-}
-
-function filterParticipants() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const rt = document.getElementById('filterRT').value;
-    const sport = document.getElementById('filterSport').value;
-    const filtered = PARTICIPANTS.filter(p => 
-        (!search || p.name.toLowerCase().includes(search)) &&
-        (!rt || p.rt === rt) &&
-        (!sport || p.sport === sport)
-    );
-    renderParticipants(filtered);
-}
-function renderParticipants(data = PARTICIPANTS) {
-    const tbody = document.getElementById('participantsTable');
-    document.getElementById('participantCount').textContent = data.length;
-    
-    tbody.innerHTML = data.slice(0, 100).map((p, i) => {
-        const statusColor = p.status === 'Aktif' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 
-                            p.status === 'Pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                            'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+async function populateFilters() {
+    try {
+        const participants = await getParticipants();
         
-        // Format RT: otomatis konversi ke format RT 01, RT 02, dst
-        let formattedRT = p.rt;
-        if (formattedRT) {
-            // Extract angka dari RT (contoh: "RT 1" -> "1", "RT 01" -> "01", "1" -> "1")
-            let rtNumber = formattedRT.match(/\d+/);
-            if (rtNumber) {
-                const num = parseInt(rtNumber[0]);
-                if (!isNaN(num) && num >= 1 && num <= 14) {
-                    formattedRT = `RT ${num.toString().padStart(2, '0')}`;
-                }
-            }
+        if (!Array.isArray(participants)) return;
+        
+        // Ambil daftar unik RT
+        const rtList = [...new Set(participants.map(p => p.rt).filter(Boolean))];
+        rtList.sort();
+        
+        // Ambil daftar unik Cabang Olahraga
+        const sportList = [...new Set(participants.map(p => p.sport).filter(Boolean))];
+        sportList.sort();
+        
+        const filterRT = document.getElementById('filterRT');
+        if (filterRT) {
+            filterRT.innerHTML = '<option value="">Semua RT</option>' + 
+                rtList.map(rt => `<option value="${rt}">${rt}</option>`).join('');
         }
         
-        return `
+        const filterSport = document.getElementById('filterSport');
+        if (filterSport) {
+            filterSport.innerHTML = '<option value="">Semua Cabang</option>' + 
+                sportList.map(sport => `<option value="${sport}">${sport}</option>`).join('');
+        }
+        
+    } catch (error) {
+        console.error('Error populateFilters:', error);
+    }
+}
+
+async function filterParticipants() {
+    try {
+        const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+        const rt = document.getElementById('filterRT')?.value || '';
+        const sport = document.getElementById('filterSport')?.value || '';
+        
+        let participants = await getParticipants();
+        
+        if (!Array.isArray(participants)) {
+            participants = [];
+        }
+        
+        let filtered = participants;
+        
+        if (search) {
+            filtered = filtered.filter(p => p.name?.toLowerCase().includes(search));
+        }
+        if (rt) {
+            filtered = filtered.filter(p => p.rt === rt);
+        }
+        if (sport) {
+            filtered = filtered.filter(p => p.sport === sport);
+        }
+        
+        // Render filtered data
+        const tbody = document.getElementById('participantsTable');
+        if (!tbody) return;
+        
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">Tidak ada peserta yang ditemukan</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = filtered.map((p, index) => `
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                <td class="px-4 py-3 text-gray-500">${i+1}</td>
+                <td class="px-4 py-3">${index + 1}</td>
+                <td class="px-4 py-3 font-semibold">${escapeHtml(p.name) || '-'}</td>
+                <td class="px-4 py-3"><span class="bg-red-100 px-2 py-0.5 rounded text-xs font-bold">${p.rt || '-'}</span></td>
+                <td class="px-4 py-3">${p.sport || '-'}</td>
+                <td class="px-4 py-3">${p.noHp || '-'}</td>
+                <td class="px-4 py-3">${p.status || 'Aktif'}</td>
+            </tr>
+        `).join('');
+        
+        const countElement = document.getElementById('participantCount');
+        if (countElement) countElement.textContent = filtered.length;
+        
+    } catch (error) {
+        console.error('Error filterParticipants:', error);
+    }
+}
+// ==================== RENDER PESERTA DI INDEX ====================
+async function renderParticipants() {
+    try {
+        // Ambil data dari API
+        let participants = await getParticipants();
+        
+        // Pastikan participants adalah array
+        if (!Array.isArray(participants)) {
+            console.warn('Participants is not an array:', participants);
+            participants = [];
+        }
+        
+        const tbody = document.getElementById('participantsTable');
+        if (!tbody) return;
+        
+        if (participants.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-8 text-gray-500">
+                        <i class="fas fa-users text-4xl mb-2 opacity-50 block"></i>
+                        Belum ada data peserta
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        // Update total count
+        const countElement = document.getElementById('participantCount');
+        if (countElement) countElement.textContent = participants.length;
+        
+        // Render tabel
+        tbody.innerHTML = participants.map((p, index) => `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <td class="px-4 py-3 text-gray-500">${index + 1}</td>
                 <td class="px-4 py-3 font-semibold flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-yellow-500 text-white flex items-center justify-center text-xs font-bold">${p.name.charAt(0)}</div>
-                    ${escapeHtml(p.name)}
-                </td>
-                <td class="px-4 py-3"><span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded text-xs font-bold">${formattedRT}</span></td>
-                <td class="px-4 py-3">${p.sport}</td>
-                <td class="px-4 py-3"><span class="${statusColor} px-2 py-0.5 rounded text-xs font-bold">${p.status}</span></td>
-                <td class="px-4 py-3">
-                    <div class="flex gap-2">
-                        <button onclick="editParticipant(${p.id})" 
-                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button onclick="deleteParticipant(${p.id})" 
-                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
-                            <i class="fas fa-trash"></i> Hapus
-                        </button>
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-yellow-500 text-white flex items-center justify-center text-xs font-bold">
+                        ${p.name ? p.name.charAt(0).toUpperCase() : '?'}
                     </div>
+                    ${escapeHtml(p.name) || '-'}
+                </td>
+                <td class="px-4 py-3">
+                    <span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded text-xs font-bold">
+                        ${p.rt || '-'}
+                    </span>
+                </td>
+                <td class="px-4 py-3">${p.sport || '-'}</td>
+                <td class="px-4 py-3">${p.noHp || '-'}</td>
+                <td class="px-4 py-3">
+                    <span class="px-2 py-1 rounded-full text-xs font-bold ${p.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                        ${p.status || 'Aktif'}
+                    </span>
                 </td>
             </tr>
-        `;
-    }).join('');
-    
-    if (data.length > 100) {
-        tbody.innerHTML += `<tr><td colspan="6" class="px-4 py-3 text-center text-sm text-gray-500">+${data.length-100} peserta lainnya (gunakan filter untuk melihat)</td></tr>`;
+        `).join('');
+        
+        console.log(`✅ Rendered ${participants.length} participants`);
+        
+    } catch (error) {
+        console.error('Error renderParticipants:', error);
+        const tbody = document.getElementById('participantsTable');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-red-500">Gagal memuat data peserta</td></tr>';
+        }
     }
 }
 
 //Export dan import  Peserta Excel
-function exportExcel() {
+// ==================== EXPORT EXCEL ====================
+async function exportExcel() {
     try {
-        const participants = generateParticipants();
+        toast('Info', 'Menyiapkan data export...');
+        
+        // Ambil data peserta dengan await
+        let participants = await getParticipants();
+        
+        // Pastikan participants adalah array
+        if (!Array.isArray(participants)) {
+            console.warn('Participants is not an array:', participants);
+            participants = [];
+        }
+        
+        if (participants.length === 0) {
+            toast('Error', 'Tidak ada data peserta untuk di-export');
+            return;
+        }
         
         // Prepare data for Excel
-        const exportData = participants.map(p => ({
-            'ID': p.id,
-            'Nama Peserta': p.name,
-            'RT': p.rt,
-            'Olahraga': p.sport,
-            'Status': p.status
+        const exportData = participants.map((p, index) => ({
+            'No': index + 1,
+            'Nama Peserta': p.name || '-',
+            'RT': p.rt || '-',
+            'Cabang Olahraga': p.sport || '-',
+            'No HP': p.noHp || '-',
+            'Status': p.status || 'Aktif'
         }));
         
         // Convert to worksheet
         const ws = XLSX.utils.json_to_sheet(exportData);
         
-        // Auto-size columns
+        // Auto-size columns (approximate)
         ws['!cols'] = [
-            {wch:8},   // ID
-            {wch:25},  // Nama Peserta
-            {wch:10},  // RT
-            {wch:20},  // Olahraga
-            {wch:12}   // Status
+            { wch: 5 },   // No
+            { wch: 25 },  // Nama Peserta
+            { wch: 10 },  // RT
+            { wch: 20 },  // Cabang Olahraga
+            { wch: 15 },  // No HP
+            { wch: 10 }   // Status
         ];
-        
-        // Style the header (optional)
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-            const address = XLSX.utils.encode_col(C) + '1';
-            if (!ws[address]) continue;
-            ws[address].s = {
-                font: { bold: true, sz: 12 },
-                fill: { fgColor: { rgb: "FF4F81BD" } }
-            };
-        }
         
         // Create workbook
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Peserta');
+        XLSX.utils.book_append_sheet(wb, ws, 'Data Peserta');
         
         // Download file
-        XLSX.writeFile(wb, `Data_Peserta_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
+        const fileName = `Data_Peserta_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`;
+        XLSX.writeFile(wb, fileName);
         
-        showToast(`✅ Berhasil mengekspor ${participants.length} peserta!`, 'success');
+        toast('Berhasil', `Berhasil mengekspor ${participants.length} peserta!`);
+        
     } catch (error) {
         console.error('Export error:', error);
-        showToast('❌ Gagal mengekspor data peserta!', 'error');
+        toast('Gagal', 'Terjadi kesalahan saat mengekspor data: ' + error.message);
     }
 }
 
-// Import data peserta dari file Excel/CSV
-function importParticipantsFromFile() {
-    // Buat input file dinamis
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.xlsx,.xls,.csv';
-    fileInput.style.display = 'none';
+// ==================== TOAST NOTIFICATION ====================
+function showToast(message, type = 'info') {
+    // Cek apakah sudah ada container toast
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'fixed bottom-4 right-4 z-50 space-y-2';
+        document.body.appendChild(toastContainer);
+    }
     
-    fileInput.onchange = function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    const toast = document.createElement('div');
+    toast.className = `px-4 py-2 rounded-lg text-white text-sm shadow-lg transition-all duration-300 ${
+        type === 'success' ? 'bg-green-600' : 
+        type === 'error' ? 'bg-red-600' : 
+        type === 'warning' ? 'bg-yellow-500' : 'bg-blue-600'
+    }`;
+    toast.textContent = message;
+    
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Alias untuk memudahkan
+const toast = showToast;
+
+// Import data peserta dari file Excel/CSV
+// ==================== IMPORT PARTICIPANTS FROM CSV FILE ====================
+async function importParticipantsFromFile() {
+    return new Promise((resolve, reject) => {
+        // Buat input file
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.csv,.xlsx,.xls';
+        fileInput.style.display = 'none';
         
-        const fileExt = file.name.split('.').pop().toLowerCase();
-        if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
-            showToast('❌ Hanya file .xlsx, .xls, atau .csv yang didukung!', 'error');
-            return;
-        }
-        
-        showToast('📥 Membaca file peserta...', 'info');
-        
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            try {
-                const content = e.target.result;
-                let data = [];
-                
-                if (fileExt === 'csv') {
-                    data = parseCSVToJSON(content);
-                } else {
-                    if (typeof XLSX === 'undefined') {
-                        showToast('⚠️ Library Excel tidak tersedia. Gunakan format CSV.', 'warning');
+        fileInput.onchange = async (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                reject('No file selected');
+                return;
+            }
+            
+            // Validasi ekstensi file
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            if (!['csv', 'xlsx', 'xls'].includes(fileExt)) {
+                reject('Format file harus CSV atau Excel');
+                return;
+            }
+            
+            toast('Info', 'Sedang membaca file...');
+            
+            const reader = new FileReader();
+            
+            reader.onload = async (e) => {
+                try {
+                    let data = [];
+                    const content = e.target.result;
+                    
+                    if (fileExt === 'csv') {
+                        // Parse CSV
+                        data = parseCSV(content);
+                    } else {
+                        // Parse Excel (XLSX)
+                        if (typeof XLSX === 'undefined') {
+                            reject('Library Excel tidak tersedia. Gunakan file CSV.');
+                            return;
+                        }
+                        const workbook = XLSX.read(content, { type: 'binary' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        data = XLSX.utils.sheet_to_json(worksheet);
+                    }
+                    
+                    if (!data || data.length === 0) {
+                        reject('File kosong atau tidak ada data yang valid');
                         return;
                     }
-                    const workbook = XLSX.read(content, { type: 'binary' });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    data = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    toast('Info', `Mengimpor ${data.length} data...`);
+                    
+                    // Proses import
+                    const result = await processImportParticipants(data);
+                    
+                    // Refresh tampilan
+                    await renderPeserta();
+                    await initDashboard();
+                    
+                    toast('Berhasil', `Import selesai! ${result.added} peserta ditambahkan. Total: ${result.total} peserta`);
+                    resolve(result);
+                    
+                } catch (error) {
+                    console.error('Import error:', error);
+                    reject(error.message);
                 }
-                
-                const result = processImportedParticipants(data);
-                showToast(`✅ Berhasil import ${result.success} peserta!`, 'success');
-                
-                if (typeof displayParticipants === 'function') {
-                    displayParticipants();
-                }
-                
-            } catch (error) {
-                console.error('Import error:', error);
-                showToast('❌ Gagal membaca file! Periksa format data.', 'error');
+            };
+            
+            reader.onerror = () => {
+                reject('Gagal membaca file');
+            };
+            
+            if (fileExt === 'csv') {
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                reader.readAsBinaryString(file);
             }
+            
+            // Cleanup
+            document.body.removeChild(fileInput);
         };
         
-        if (fileExt === 'csv') {
-            reader.readAsText(file, 'UTF-8');
-        } else {
-            reader.readAsBinaryString(file);
-        }
-        
-        // Hapus input dari DOM
-        document.body.removeChild(fileInput);
-    };
+        document.body.appendChild(fileInput);
+        fileInput.click();
+    });
+}
+
+// ==================== PARSE CSV ====================
+function parseCSV(csvText) {
+    const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+    if (lines.length < 2) return [];
     
-    document.body.appendChild(fileInput);
-    fileInput.click();
+    // Parse header
+    const headers = parseCSVLine(lines[0]);
+    const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
+    
+    // Cari index kolom yang diperlukan
+    const nameIndex = normalizedHeaders.findIndex(h => ['name', 'nama', 'nama peserta'].includes(h));
+    const rtIndex = normalizedHeaders.findIndex(h => ['rt', 'rt ', 'rtrt'].includes(h));
+    const sportIndex = normalizedHeaders.findIndex(h => ['sport', 'cabor', 'olahraga'].includes(h));
+    const noHpIndex = normalizedHeaders.findIndex(h => ['nohp', 'no hp', 'phone', 'telepon'].includes(h));
+    const statusIndex = normalizedHeaders.findIndex(h => ['status'].includes(h));
+    
+    if (nameIndex === -1 || rtIndex === -1 || sportIndex === -1) {
+        throw new Error('Format CSV salah! Kolom wajib: name, rt, sport');
+    }
+    
+    const result = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        if (values.length < 3) continue;
+        
+        const name = values[nameIndex]?.trim();
+        const rt = values[rtIndex]?.trim();
+        const sport = values[sportIndex]?.trim();
+        
+        if (!name || !rt || !sport) continue;
+        
+        result.push({
+            name: name,
+            rt: rt,
+            sport: sport,
+            noHp: noHpIndex !== -1 ? values[noHpIndex]?.trim() || '' : '',
+            status: statusIndex !== -1 ? values[statusIndex]?.trim() || 'Aktif' : 'Aktif'
+        });
+    }
+    
+    return result;
+}
+
+// ==================== PARSE CSV LINE (handle quotes) ====================
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim());
+    
+    return result;
+}
+
+// ==================== PROCESS IMPORT PARTICIPANTS ====================
+async function processImportParticipants(importedData) {
+    console.log('Processing imported data:', importedData.length);
+    
+    // Ambil data existing
+    let existingParticipants = await getParticipants();
+    if (!Array.isArray(existingParticipants)) {
+        existingParticipants = [];
+    }
+    
+    // Buat Map untuk tracking duplikat
+    const existingMap = new Map();
+    existingParticipants.forEach(p => {
+        const key = `${p.name}|${p.rt}|${p.sport}`;
+        existingMap.set(key, p);
+    });
+    
+    let addedCount = 0;
+    
+    // Proses setiap data baru
+    for (const newData of importedData) {
+        const formattedRT = formatRT(newData.rt);
+        const key = `${newData.name}|${formattedRT}|${newData.sport}`;
+        
+        if (!existingMap.has(key)) {
+            const newParticipant = {
+                id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+                name: newData.name,
+                rt: formattedRT,
+                sport: newData.sport,
+                noHp: newData.noHp || '',
+                status: newData.status === 'Aktif' || newData.status === 'active' ? 'Aktif' : 'Pending'
+            };
+            existingMap.set(key, newParticipant);
+            addedCount++;
+        }
+    }
+    
+    // Konversi Map ke array
+    const finalParticipants = Array.from(existingMap.values());
+    
+    // Simpan ke storage
+    await saveParticipants(finalParticipants);
+    
+    console.log(`Import complete: ${addedCount} added, total ${finalParticipants.length}`);
+    
+    return {
+        added: addedCount,
+        total: finalParticipants.length,
+        errors: importedData.length - addedCount
+    };
+}
+
+// ==================== FORMAT RT ====================
+function formatRT(rt) {
+    if (!rt) return 'RT 01';
+    
+    // Cek apakah sudah ada format RT
+    if (rt.toUpperCase().includes('RT')) {
+        const match = rt.match(/\d+/);
+        if (match) {
+            const num = parseInt(match[0]);
+            return `RT ${num.toString().padStart(2, '0')}`;
+        }
+        return rt.toUpperCase();
+    }
+    
+    // Jika hanya angka
+    const num = parseInt(rt);
+    if (!isNaN(num)) {
+        return `RT ${num.toString().padStart(2, '0')}`;
+    }
+    
+    return rt;
+}
+
+// ==================== DOWNLOAD TEMPLATE CSV ====================
+function downloadTemplateCSV() {
+    const headers = ['name', 'rt', 'sport', 'noHp', 'status'];
+    const sampleData = [
+        ['Ahmad Fauzi', 'RT 01', 'Futsal', '081234567890', 'Aktif'],
+        ['Budi Santoso', 'RT 02', 'Basket', '081234567891', 'Aktif'],
+        ['Citra Dewi', 'RT 03', 'Badminton', '081234567892', 'Aktif'],
+        ['Dian Pratama', 'RT 01', 'Voli', '081234567893', 'Aktif'],
+        ['Eko Wahyu', 'RT 04', 'Catur', '081234567894', 'Aktif'],
+    ];
+    
+    const csvContent = [
+        headers.join(','),
+        ...sampleData.map(row => row.join(','))
+    ].join('\n');
+    
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'template_import_peserta.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast('Berhasil', 'Template CSV berhasil didownload');
+}
+
+// ==================== EVENT LISTENER UNTUK TOMBOL IMPORT ====================
+// Hubungkan ke tombol import
+const btnImportPeserta = document.getElementById('btnImportPeserta');
+if (btnImportPeserta) {
+    btnImportPeserta.addEventListener('click', async () => {
+        // Tawarkan download template
+        const confirmTemplate = confirm('Download template CSV terlebih dahulu?\n\nOK = Download template\nCancel = Langsung import file');
+        
+        if (confirmTemplate) {
+            downloadTemplateCSV();
+            setTimeout(async () => {
+                if (confirm('Sudah selesai mengisi template? Klik OK untuk pilih file CSV')) {
+                    try {
+                        await importParticipantsFromFile();
+                    } catch (error) {
+                        toast('Error', error);
+                    }
+                }
+            }, 2000);
+        } else {
+            try {
+                await importParticipantsFromFile();
+            } catch (error) {
+                toast('Error', error);
+            }
+        }
+    });
 }
 
 // ============ FUNGSI DASAR PARTICIPANTS ============
@@ -3315,104 +3647,113 @@ function renderRound(title, matches, side = 'left', roundIdx = 0) {
 async function renderBracket() {
     console.log('🎯 Rendering bracket...');
     
-    // Ambil data bracket terbaru
-    const brackets = await getBracketData();
-    
-    if (brackets[currentBracket]) {
-        mainBracket = brackets[currentBracket];
-    } else {
-        // Jika belum ada data, buat default
-        mainBracket = getDefaultBracket();
-    }
-    
-    propagateWinners();
-    
-    const leftRounds = [
-        { title: 'PENYISIHAN', matches: mainBracket.left.penyisihan },
-        { title: 'PEREMPAT FINAL', matches: mainBracket.left.perempat },
-        { title: 'SEMI FINAL', matches: mainBracket.left.semifinal }
-    ];
-    
-    const rightRounds = [
-        { title: 'SEMI FINAL', matches: mainBracket.right.semifinal },
-        { title: 'PEREMPAT FINAL', matches: mainBracket.right.perempat },
-        { title: 'PENYISIHAN', matches: mainBracket.right.penyisihan }
-    ];
-    
-    // Render left bracket
-    let leftHtml = '<div class="bracket-side">';
-    leftRounds.forEach(round => {
-        leftHtml += `<div class="round"><div class="round-title">${round.title}</div>`;
-        if (round.matches && round.matches.length > 0) {
-            round.matches.forEach((match, idx) => {
-                const spacing = round.title === 'PENYISIHAN' ? 40 : (round.title === 'PEREMPAT FINAL' ? 20 : 15);
-                leftHtml += `<div class="match" style="margin-bottom: ${idx < round.matches.length - 1 ? spacing : 0}px">`;
-                leftHtml += renderMatchCard(match);
-                leftHtml += `</div>`;
-            });
+    try {
+        // Ambil data bracket terbaru
+        const brackets = await getBracketData();
+        
+        if (brackets && brackets[currentBracket]) {
+            mainBracket = brackets[currentBracket];
         } else {
-            leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+            mainBracket = {
+                left: { penyisihan: [], perempat: [], semifinal: [] },
+                right: { penyisihan: [], perempat: [], semifinal: [] },
+                final: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false },
+                thirdPlace: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false }
+            };
+        }
+        
+        // Log untuk debugging
+        console.log(`Bracket data for ${currentBracket}:`, mainBracket);
+        
+        const leftRounds = [
+            { title: 'PENYISIHAN', matches: mainBracket.left?.penyisihan || [] },
+            { title: 'PEREMPAT FINAL', matches: mainBracket.left?.perempat || [] },
+            { title: 'SEMI FINAL', matches: mainBracket.left?.semifinal || [] }
+        ];
+        
+        const rightRounds = [
+            { title: 'SEMI FINAL', matches: mainBracket.right?.semifinal || [] },
+            { title: 'PEREMPAT FINAL', matches: mainBracket.right?.perempat || [] },
+            { title: 'PENYISIHAN', matches: mainBracket.right?.penyisihan || [] }
+        ];
+        
+        // Render HTML
+        let leftHtml = '<div class="bracket-side">';
+        for (const round of leftRounds) {
+            leftHtml += `<div class="round"><div class="round-title">${round.title}</div>`;
+            if (round.matches && round.matches.length > 0) {
+                round.matches.forEach((match, idx) => {
+                    const spacing = round.title === 'PENYISIHAN' ? 40 : (round.title === 'PEREMPAT FINAL' ? 20 : 15);
+                    leftHtml += `<div class="match" style="margin-bottom: ${idx < round.matches.length - 1 ? spacing : 0}px">`;
+                    leftHtml += renderMatchCard(match);
+                    leftHtml += `</div>`;
+                });
+            } else {
+                leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+            }
+            leftHtml += `</div>`;
         }
         leftHtml += `</div>`;
-    });
-    leftHtml += `</div>`;
-    
-    // Render middle (Final & Third Place)
-    const middleHtml = `
-        <div class="final-container">
-            <div class="round-title" style="background: #eab308;">🏆 FINAL 🏆</div>
-            <div class="match">${renderMatchCard(mainBracket.final)}</div>
-            <div class="round-title mt-4" style="background: #6b7280;">🥉 PEREBUTAN JUARA 3 🥉</div>
-            <div class="match">${renderMatchCard(mainBracket.thirdPlace)}</div>
-        </div>
-    `;
-    
-    // Render right bracket
-    let rightHtml = '<div class="bracket-side">';
-    rightRounds.forEach(round => {
-        rightHtml += `<div class="round"><div class="round-title">${round.title}</div>`;
-        if (round.matches && round.matches.length > 0) {
-            round.matches.forEach((match, idx) => {
-                const spacing = round.title === 'PENYISIHAN' ? 40 : (round.title === 'PEREMPAT FINAL' ? 20 : 15);
-                rightHtml += `<div class="match" style="margin-bottom: ${idx < round.matches.length - 1 ? spacing : 0}px">`;
-                rightHtml += renderMatchCard(match);
-                rightHtml += `</div>`;
-            });
-        } else {
-            rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        
+        const middleHtml = `
+            <div class="final-container">
+                <div class="round-title" style="background: #eab308;">🏆 FINAL 🏆</div>
+                <div class="match">${renderMatchCard(mainBracket.final || {})}</div>
+                <div class="round-title mt-4" style="background: #6b7280;">🥉 PEREBUTAN JUARA 3 🥉</div>
+                <div class="match">${renderMatchCard(mainBracket.thirdPlace || {})}</div>
+            </div>
+        `;
+        
+        let rightHtml = '<div class="bracket-side">';
+        for (const round of rightRounds) {
+            rightHtml += `<div class="round"><div class="round-title">${round.title}</div>`;
+            if (round.matches && round.matches.length > 0) {
+                round.matches.forEach((match, idx) => {
+                    const spacing = round.title === 'PENYISIHAN' ? 40 : (round.title === 'PEREMPAT FINAL' ? 20 : 15);
+                    rightHtml += `<div class="match" style="margin-bottom: ${idx < round.matches.length - 1 ? spacing : 0}px">`;
+                    rightHtml += renderMatchCard(match);
+                    rightHtml += `</div>`;
+                });
+            } else {
+                rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+            }
+            rightHtml += `</div>`;
         }
         rightHtml += `</div>`;
-    });
-    rightHtml += `</div>`;
-    
-    const sportName = SPORTS_LIST.find(s => s.id === currentBracket)?.name || 'BAGAN PERTANDINGAN';
-    
-    const fullHtml = `
-        <div class="mb-4 flex justify-between items-center flex-wrap gap-3">
-            <h2 class="text-2xl font-black text-red-700 dark:text-red-400">
-                <i class="fas fa-trophy mr-2"></i>${sportName} - DUA SISI
-            </h2>
-            <button onclick="refreshBracketData()" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm">
-                <i class="fas fa-sync-alt mr-1"></i> Refresh
-            </button>
-        </div>
-        <div class="bracket-wrapper" style="overflow-x: auto;">
-            <div class="bracket" style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; min-width: max-content;">
-                ${leftHtml}
-                ${middleHtml}
-                ${rightHtml}
+        
+        const sportName = SPORTS_LIST.find(s => s.id === currentBracket)?.name || 'BAGAN';
+        
+        const fullHtml = `
+            <div class="mb-4 flex justify-between items-center flex-wrap gap-3">
+                <h2 class="text-2xl font-black text-red-700">${sportName} - DUA SISI</h2>
+                <button onclick="refreshBracketData()" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm">
+                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                </button>
             </div>
-        </div>
-    `;
-    
-    const bracketContent = document.getElementById('bracketContent');
-    if (bracketContent) {
-        bracketContent.innerHTML = fullHtml;
-        // Scroll ke kiri
-        setTimeout(() => {
-            const wrapper = document.querySelector('.bracket-wrapper');
-            if (wrapper) wrapper.scrollLeft = 0;
-        }, 100);
+            <div class="bracket-wrapper" style="overflow-x: auto;">
+                <div class="bracket" style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; min-width: max-content;">
+                    ${leftHtml}
+                    ${middleHtml}
+                    ${rightHtml}
+                </div>
+            </div>
+        `;
+        
+        const bracketContent = document.getElementById('bracketContent');
+        if (bracketContent) {
+            bracketContent.innerHTML = fullHtml;
+            setTimeout(() => {
+                const wrapper = document.querySelector('.bracket-wrapper');
+                if (wrapper) wrapper.scrollLeft = 0;
+            }, 100);
+        }
+        
+    } catch (error) {
+        console.error('Error renderBracket:', error);
+        const bracketContent = document.getElementById('bracketContent');
+        if (bracketContent) {
+            bracketContent.innerHTML = '<div class="text-center text-red-500 py-8">Gagal memuat bagan pertandingan</div>';
+        }
     }
 }
 
@@ -3449,38 +3790,50 @@ function renderMatchCard(match) {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Index page loaded');
     
-    // Load data
-    await renderBracketTabs();
-    await renderBracket();
-    await renderAnnouncements();
-    await renderParticipants();
-    
-    // Countdown
-    if (typeof initCountdown === 'function') initCountdown();
+    try {
+        // Load data peserta
+        await populateFilters();
+        await renderParticipants();
+        
+        // Load pengumuman
+        await renderLatestNews();
+        await renderAnnouncements();
+        
+        // Load bracket
+        await renderBracketTabs();
+        await renderBracket();
+        
+        // Countdown
+        if (typeof initCountdown === 'function') {
+            initCountdown();
+        }
+        
+    } catch (error) {
+        console.error('Error during initialization:', error);
+    }
 });
+
 // Deteksi perubahan dari admin
 window.addEventListener('storage', async (e) => {
     console.log('Storage changed:', e.key);
     
-    if (e.key === 'app_matches') {
-        console.log('🔄 Match data changed, refreshing bracket...');
-        await renderBracket();
-        showToast('📊 Data pertandingan telah diperbarui oleh Admin', 'info');
-    }
-    
     if (e.key === 'app_participants') {
-        console.log('🔄 Participant data changed');
-        if (typeof renderParticipants === 'function') {
-            await renderParticipants();
-        }
+        console.log('🔄 Participant data changed, refreshing...');
+        await populateFilters();
+        await renderParticipants();
         showToast('👥 Data peserta telah diperbarui', 'info');
     }
     
+    if (e.key === 'app_matches') {
+        console.log('🔄 Match data changed, refreshing bracket...');
+        await renderBracket();
+        showToast('📊 Data pertandingan telah diperbarui', 'info');
+    }
+    
     if (e.key === 'app_announcements') {
-        console.log('🔄 Announcement data changed');
-        if (typeof renderAnnouncements === 'function') {
-            await renderAnnouncements();
-        }
+        console.log('🔄 Announcement data changed, refreshing...');
+        await renderLatestNews();
+        await renderAnnouncements();
         showToast('📢 Pengumuman baru dari Admin', 'info');
     }
 });
