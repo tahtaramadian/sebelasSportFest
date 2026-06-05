@@ -219,8 +219,6 @@ async function updateMatchScore(matchId, skorA, skorB) {
 }
 
 // ==================== BRACKET DATA UNTUK INDEX ====================
-// ==================== BRACKET DATA UNTUK INDEX ====================
-// ==================== BRACKET DATA UNTUK INDEX ====================
 async function getBracketData() {
     try {
         const matches = await getMatches();
