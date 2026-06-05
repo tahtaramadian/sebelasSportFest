@@ -63,20 +63,20 @@
             box-sizing: border-box;
         }
         /* Bracket Layout - Tanpa Garis */
-.bracket-wrapper {
-    overflow-x: auto;
-    width: 100%;
-    padding-bottom: 20px;
-}
+        .bracket-wrapper {
+         overflow-x: auto;
+        width: 100%;
+        padding-bottom: 20px;
+        }
 
-.bracket {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: 30px;
-    min-width: max-content;
-}
+        .bracket {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: stretch;
+        gap: 30px;
+        min-width: max-content;
+        }
 
 .bracket-side {
     display: flex;
@@ -87,9 +87,27 @@
 .round {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     min-width: 260px;
+    position: relative;
+}
+.round .match {
+    position: relative;
+    margin: 10px 0;
+}
+/* Untuk sisi kanan, agar BY di tengah */
+.bracket-side:last-child .round:first-child .match {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
+/* Atur ulang order match di penyisihan kanan */
+.bracket-side:last-child .round:last-child {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 .round-title {
     text-align: center;
     font-weight: bold;
@@ -99,6 +117,7 @@
     border-radius: 8px;
     font-size: 13px;
     margin-bottom: 20px;
+    flex-shrink: 0; /* Judul tidak ikut flex */
 }
 
 .match {
@@ -1759,13 +1778,232 @@ function renderSports() {
     `).join('');
 }
 
- function showSportDetail(id) {
+ async function showSportDetail(id) {
     const sport = SPORTS.find(s => s.id === id);
     if (!sport) return;
+    
+    // Ambil data bracket dari API
+    const brackets = await getBracketData();
+    const sportBracket = brackets[id] || null;
     
     document.getElementById('sportsGrid').classList.add('hidden');
     const detail = document.getElementById('sportDetail');
     detail.classList.remove('hidden');
+    
+    // Generate HTML untuk jadwal pertandingan
+    let matchesHtml = '<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mt-6">';
+    matchesHtml += '<h3 class="text-xl font-black mb-4 text-red-700 dark:text-red-400 flex items-center gap-2"><i class="fas fa-futbol"></i>Jadwal Pertandingan</h3>';
+    
+    if (sportBracket) {
+        // Penyisihan (Left + Right)
+        matchesHtml += '<div class="mb-6">';
+        matchesHtml += '<h4 class="font-bold text-lg mb-3 border-b pb-2">🏆 Babak Penyisihan</h4>';
+        matchesHtml += '<div class="grid md:grid-cols-2 gap-4">';
+        
+        // Left bracket penyisihan
+        if (sportBracket.left && sportBracket.left.penyisihan) {
+            sportBracket.left.penyisihan.forEach(match => {
+                if (match.team1 && match.team2 && match.team1 !== 'BY' && match.team2 !== 'BY') {
+                    matchesHtml += `
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+                            <div class="flex justify-between items-center">
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team1}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score1 !== '-' ? match.score1 : '-'}</div>
+                                </div>
+                                <div class="text-gray-400 font-bold px-2">VS</div>
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team2}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score2 !== '-' ? match.score2 : '-'}</div>
+                                </div>
+                            </div>
+                            <div class="text-center text-xs text-gray-400 mt-2">
+                                <i class="far fa-calendar-alt mr-1"></i>${match.date || 'TBA'} | <i class="far fa-clock mr-1"></i>${match.time || 'TBA'}
+                            </div>
+                            ${match.done ? `<div class="text-center text-xs text-green-600 mt-1">✅ Pemenang: ${match.winner}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        // Right bracket penyisihan
+        if (sportBracket.right && sportBracket.right.penyisihan) {
+            sportBracket.right.penyisihan.forEach(match => {
+                if (match.team1 && match.team2 && match.team1 !== 'BY' && match.team2 !== 'BY') {
+                    matchesHtml += `
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+                            <div class="flex justify-between items-center">
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team1}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score1 !== '-' ? match.score1 : '-'}</div>
+                                </div>
+                                <div class="text-gray-400 font-bold px-2">VS</div>
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team2}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score2 !== '-' ? match.score2 : '-'}</div>
+                                </div>
+                            </div>
+                            <div class="text-center text-xs text-gray-400 mt-2">
+                                <i class="far fa-calendar-alt mr-1"></i>${match.date || 'TBA'} | <i class="far fa-clock mr-1"></i>${match.time || 'TBA'}
+                            </div>
+                            ${match.done ? `<div class="text-center text-xs text-green-600 mt-1">✅ Pemenang: ${match.winner}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+        }
+        matchesHtml += '</div></div>';
+        
+        // Perempat Final
+        matchesHtml += '<div class="mb-6">';
+        matchesHtml += '<h4 class="font-bold text-lg mb-3 border-b pb-2">🔥 Babak Perempat Final</h4>';
+        matchesHtml += '<div class="grid md:grid-cols-2 gap-4">';
+        
+        if (sportBracket.left && sportBracket.left.perempat) {
+            sportBracket.left.perempat.forEach(match => {
+                if (match.team1 && match.team2) {
+                    matchesHtml += `
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+                            <div class="flex justify-between items-center">
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team1 || 'Belum diketahui'}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score1 !== '-' ? match.score1 : '-'}</div>
+                                </div>
+                                <div class="text-gray-400 font-bold px-2">VS</div>
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team2 || 'Belum diketahui'}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score2 !== '-' ? match.score2 : '-'}</div>
+                                </div>
+                            </div>
+                            <div class="text-center text-xs text-gray-400 mt-2">
+                                <i class="far fa-calendar-alt mr-1"></i>${match.date || 'TBA'} | <i class="far fa-clock mr-1"></i>${match.time || 'TBA'}
+                            </div>
+                            ${match.done ? `<div class="text-center text-xs text-green-600 mt-1">✅ Pemenang: ${match.winner}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        if (sportBracket.right && sportBracket.right.perempat) {
+            sportBracket.right.perempat.forEach(match => {
+                if (match.team1 && match.team2) {
+                    matchesHtml += `
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+                            <div class="flex justify-between items-center">
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team1 || 'Belum diketahui'}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score1 !== '-' ? match.score1 : '-'}</div>
+                                </div>
+                                <div class="text-gray-400 font-bold px-2">VS</div>
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team2 || 'Belum diketahui'}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score2 !== '-' ? match.score2 : '-'}</div>
+                                </div>
+                            </div>
+                            <div class="text-center text-xs text-gray-400 mt-2">
+                                <i class="far fa-calendar-alt mr-1"></i>${match.date || 'TBA'} | <i class="far fa-clock mr-1"></i>${match.time || 'TBA'}
+                            </div>
+                            ${match.done ? `<div class="text-center text-xs text-green-600 mt-1">✅ Pemenang: ${match.winner}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+        }
+        matchesHtml += '</div></div>';
+        
+        // Semi Final
+        matchesHtml += '<div class="mb-6">';
+        matchesHtml += '<h4 class="font-bold text-lg mb-3 border-b pb-2">⚡ Babak Semi Final</h4>';
+        matchesHtml += '<div class="grid md:grid-cols-2 gap-4">';
+        
+        if (sportBracket.left && sportBracket.left.semifinal) {
+            sportBracket.left.semifinal.forEach(match => {
+                if (match.team1 && match.team2) {
+                    matchesHtml += `
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+                            <div class="flex justify-between items-center">
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team1 || 'Belum diketahui'}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score1 !== '-' ? match.score1 : '-'}</div>
+                                </div>
+                                <div class="text-gray-400 font-bold px-2">VS</div>
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team2 || 'Belum diketahui'}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score2 !== '-' ? match.score2 : '-'}</div>
+                                </div>
+                            </div>
+                            <div class="text-center text-xs text-gray-400 mt-2">
+                                <i class="far fa-calendar-alt mr-1"></i>${match.date || 'TBA'} | <i class="far fa-clock mr-1"></i>${match.time || 'TBA'}
+                            </div>
+                            ${match.done ? `<div class="text-center text-xs text-green-600 mt-1">✅ Pemenang: ${match.winner}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        if (sportBracket.right && sportBracket.right.semifinal) {
+            sportBracket.right.semifinal.forEach(match => {
+                if (match.team1 && match.team2) {
+                    matchesHtml += `
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+                            <div class="flex justify-between items-center">
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team1 || 'Belum diketahui'}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score1 !== '-' ? match.score1 : '-'}</div>
+                                </div>
+                                <div class="text-gray-400 font-bold px-2">VS</div>
+                                <div class="text-center flex-1">
+                                    <div class="font-bold">${match.team2 || 'Belum diketahui'}</div>
+                                    <div class="text-xs text-gray-500">Skor: ${match.score2 !== '-' ? match.score2 : '-'}</div>
+                                </div>
+                            </div>
+                            <div class="text-center text-xs text-gray-400 mt-2">
+                                <i class="far fa-calendar-alt mr-1"></i>${match.date || 'TBA'} | <i class="far fa-clock mr-1"></i>${match.time || 'TBA'}
+                            </div>
+                            ${match.done ? `<div class="text-center text-xs text-green-600 mt-1">✅ Pemenang: ${match.winner}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+        }
+        matchesHtml += '</div></div>';
+        
+        // Final
+        matchesHtml += '<div class="mb-6">';
+        matchesHtml += '<h4 class="font-bold text-lg mb-3 border-b pb-2">🏆 Babak Final</h4>';
+        matchesHtml += '<div class="grid md:grid-cols-1 gap-4">';
+        
+        if (sportBracket.final && sportBracket.final.team1 && sportBracket.final.team2) {
+            matchesHtml += `
+                <div class="bg-gradient-to-r from-yellow-50 to-red-50 dark:from-yellow-900/20 dark:to-red-900/20 rounded-xl p-4 border-2 border-yellow-500">
+                    <div class="flex justify-between items-center">
+                        <div class="text-center flex-1">
+                            <div class="font-bold text-lg">${sportBracket.final.team1 || 'Belum diketahui'}</div>
+                            <div class="text-2xl font-black text-red-600">${sportBracket.final.score1 !== '-' ? sportBracket.final.score1 : '-'}</div>
+                        </div>
+                        <div class="text-gray-400 font-bold text-xl px-4">VS</div>
+                        <div class="text-center flex-1">
+                            <div class="font-bold text-lg">${sportBracket.final.team2 || 'Belum diketahui'}</div>
+                            <div class="text-2xl font-black text-red-600">${sportBracket.final.score2 !== '-' ? sportBracket.final.score2 : '-'}</div>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-gray-500 mt-3">
+                        <i class="far fa-calendar-alt mr-1"></i>${sportBracket.final.date || 'TBA'} | <i class="far fa-clock mr-1"></i>${sportBracket.final.time || 'TBA'}
+                    </div>
+                    ${sportBracket.final.done ? `<div class="text-center text-lg text-green-600 font-bold mt-2">🏆 JUARA: ${sportBracket.final.winner}</div>` : ''}
+                </div>
+            `;
+        }
+        matchesHtml += '</div></div>';
+        
+    } else {
+        matchesHtml += '<div class="text-center py-8 text-gray-500">Belum ada data pertandingan untuk cabang ini</div>';
+    }
+    
+    matchesHtml += '</div>';
     
     document.getElementById('sportDetailContent').innerHTML = `
         <div class="bg-gradient-to-r ${sport.color} rounded-2xl p-8 text-white mb-6">
@@ -1777,24 +2015,24 @@ function renderSports() {
         <div class="grid md:grid-cols-2 gap-6">
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6">
                 <h3 class="text-xl font-black mb-4 text-red-700 dark:text-red-400 flex items-center gap-2">
-                    <i class="fas fa-calendar"></i>Jadwal
+                    <i class="fas fa-calendar"></i>Jadwal Kegiatan
                 </h3>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <span>Babak Penyisihan</span>
-                        <span class="font-bold">${sport.schedule.penyisihan || '-'}</span>
+                        <span class="font-bold">${sport.schedule.penyisihan || sportBracket?.left?.penyisihan?.[0]?.date || 'TBA'}</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <span>Perempat Final</span>
-                        <span class="font-bold">${sport.schedule.perempatFinal || '-'}</span>
+                        <span class="font-bold">${sport.schedule.perempatFinal || sportBracket?.left?.perempat?.[0]?.date || 'TBA'}</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <span>Semi Final</span>
-                        <span class="font-bold">${sport.schedule.semiFinal || '-'}</span>
+                        <span class="font-bold">${sport.schedule.semiFinal || sportBracket?.left?.semifinal?.[0]?.date || 'TBA'}</span>
                     </div>
                     <div class="flex justify-between p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded">
                         <span class="font-bold">Final</span>
-                        <span class="font-black">${sport.schedule.final || '-'}</span>
+                        <span class="font-black">${sport.schedule.final || sportBracket?.final?.date || 'TBA'}</span>
                     </div>
                 </div>
             </div>
@@ -1806,29 +2044,30 @@ function renderSports() {
                     <div class="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
                         <div class="text-3xl">🥇</div>
                         <div>
-                            <div class="font-bold">${sport.winners.juara1 || 'Belum ditentukan'}</div>
+                            <div class="font-bold">${sportBracket?.final?.winner || sport.winners.juara1 || 'Belum ditentukan'}</div>
                             <div class="text-xs text-gray-500">Juara 1</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border-l-4 border-gray-400">
                         <div class="text-3xl">🥈</div>
                         <div>
-                            <div class="font-bold">${sport.winners.juara2 || 'Belum ditentukan'}</div>
+                            <div class="font-bold">${sportBracket?.final?.loser || sport.winners.juara2 || 'Belum ditentukan'}</div>
                             <div class="text-xs text-gray-500">Juara 2</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-500">
                         <div class="text-3xl">🥉</div>
                         <div>
-                            <div class="font-bold">${sport.winners.juara3 || 'Belum ditentukan'}</div>
+                            <div class="font-bold">${sportBracket?.thirdPlace?.winner || sport.winners.juara3 || 'Belum ditentukan'}</div>
                             <div class="text-xs text-gray-500">Juara 3</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        ${matchesHtml}
     `;
-  
+    
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
@@ -3726,9 +3965,7 @@ async function renderBracket() {
         const fullHtml = `
             <div class="mb-4 flex justify-between items-center flex-wrap gap-3">
                 <h2 class="text-2xl font-black text-red-700">${sportName} - DUA SISI</h2>
-                <button onclick="refreshBracketData()" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm">
-                    <i class="fas fa-sync-alt mr-1"></i> Refresh
-                </button>
+               
             </div>
             <div class="bracket-wrapper" style="overflow-x: auto;">
                 <div class="bracket" style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; min-width: max-content;">
