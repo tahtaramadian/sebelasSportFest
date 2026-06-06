@@ -221,52 +221,35 @@ async function updateMatchScore(matchId, skorA, skorB) {
 // ==================== BRACKET DATA UNTUK INDEX ====================
 async function getBracketData() {
     try {
-        const matches = await getMatches();
-        console.log('📦 Matches for bracket:', matches);
+    const matches = await getMatches();
+    console.log('📦 Matches for bracket:', matches);
+    
+    const brackets = {};
+    const sportMap = {
+        'Futsal': 'futsal',
+        'Basket': 'basket',
+        'Voli': 'voli',
+        'Badminton': 'badminton',
+        'Catur': 'catur',
+        'Esport': 'esport',
+        'Tenis Meja': 'tenismeja'
+    };
+    
+    matches.forEach(match => {
+        const sportId = sportMap[match.cabor];
+        if (!sportId) return;
         
-        const brackets = {};
-        const sportMap = {
-            'Futsal': 'futsal',
-            'Basket': 'basket',
-            'Voli': 'voli',
-            'Badminton': 'badminton',
-            'Catur': 'catur',
-            'Esport': 'esport',
-            'Tenis Meja': 'tenismeja'
-        };
+        if (!brackets[sportId]) {
+            brackets[sportId] = {
+                left: { penyisihan: [], perempat: [], semifinal: [] },
+                right: { penyisihan: [], perempat: [], semifinal: [] },
+                final: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: '19:00' },
+                thirdPlace: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: '19:00' }
+            };
+        }
         
-        matches.forEach(match => {
-            const sportId = sportMap[match.cabor];
-            if (!sportId) return;
-            
-            if (!brackets[sportId]) {
-                brackets[sportId] = {
-                    left: { penyisihan: [], perempat: [], semifinal: [] },
-                    right: { penyisihan: [], perempat: [], semifinal: [] },
-                    final: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: '19:00' },
-                    thirdPlace: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: '19:00' }
-                };
-            }
-            
-            let roundKey = 'penyisihan';
-            if (match.round === 'Penyisihan') roundKey = 'penyisihan';
-            else if (match.round === 'Perempat Final') roundKey = 'perempat';
-            else if (match.round === 'Semi Final') roundKey = 'semifinal';
-            
-            // Tentukan sisi
-            let side = 'left';
-            if (match.id && match.id.startsWith('L')) {
-                side = 'left';
-            } else if (match.id && match.id.startsWith('R')) {
-                side = 'right';
-            } else {
-                const teamANum = parseInt(match.timA?.replace(/\D/g, '')) || 0;
-                if (teamANum >= 1 && teamANum <= 7) side = 'left';
-                else if (teamANum >= 8 && teamANum <= 14) side = 'right';
-                else side = brackets[sportId].left[roundKey].length <= brackets[sportId].right[roundKey].length ? 'left' : 'right';
-            }
-            
-            // Skor
+        // ========== TAMBAHKAN HANDLER UNTUK FINAL ==========
+        if (match.round === 'Final' || match.round === 'final') {
             let score1 = '-', score2 = '-';
             let winner = null;
             let done = false;
@@ -282,11 +265,7 @@ async function getBracketData() {
                 }
             }
             
-            // Tanggal sudah dalam format DD/MM/YYYY dari getMatches
-            const matchDate = match.tanggal || 'TBA';
-            const matchTime = match.waktu || '19:00';
-            
-            brackets[sportId][side][roundKey].push({
+            brackets[sportId].final = {
                 id: match.id,
                 team1: match.timA,
                 team2: match.timB,
@@ -294,17 +273,102 @@ async function getBracketData() {
                 score2: score2,
                 winner: winner,
                 done: done,
-                date: matchDate,
-                time: matchTime
-            });
+                date: match.tanggal || 'TBA',
+                time: match.waktu || '19:00'
+            };
+            return; // Langsung return, tidak perlu proses lebih lanjut
+        }
+        
+        // ========== TAMBAHKAN HANDLER UNTUK PEREBUTAN JUARA 3 ==========
+        if (match.round === 'Perebutan Juara 3' || match.round === 'thirdPlace' || match.round === 'Third Place') {
+            let score1 = '-', score2 = '-';
+            let winner = null;
+            let done = false;
+            
+            if (match.skorA !== null && match.skorA !== undefined) {
+                score1 = String(match.skorA);
+                score2 = String(match.skorB);
+                done = true;
+                if (parseInt(match.skorA) > parseInt(match.skorB)) {
+                    winner = match.timA;
+                } else if (parseInt(match.skorB) > parseInt(match.skorA)) {
+                    winner = match.timB;
+                }
+            }
+            
+            brackets[sportId].thirdPlace = {
+                id: match.id,
+                team1: match.timA,
+                team2: match.timB,
+                score1: score1,
+                score2: score2,
+                winner: winner,
+                done: done,
+                date: match.tanggal || 'TBA',
+                time: match.waktu || '19:00'
+            };
+            return; // Langsung return, tidak perlu proses lebih lanjut
+        }
+        
+        // ========== KODE EXISTING UNTUK PENYISIHAN, PEREMPAT, SEMI ==========
+        let roundKey = 'penyisihan';
+        if (match.round === 'Penyisihan') roundKey = 'penyisihan';
+        else if (match.round === 'Perempat Final') roundKey = 'perempat';
+        else if (match.round === 'Semi Final') roundKey = 'semifinal';
+        else return; // Jika bukan round yang dikenal, skip
+        
+        // Tentukan sisi
+        let side = 'left';
+        if (match.id && match.id.startsWith('L')) {
+            side = 'left';
+        } else if (match.id && match.id.startsWith('R')) {
+            side = 'right';
+        } else {
+            const teamANum = parseInt(match.timA?.replace(/\D/g, '')) || 0;
+            if (teamANum >= 1 && teamANum <= 7) side = 'left';
+            else if (teamANum >= 8 && teamANum <= 14) side = 'right';
+            else side = brackets[sportId].left[roundKey].length <= brackets[sportId].right[roundKey].length ? 'left' : 'right';
+        }
+        
+        // Skor
+        let score1 = '-', score2 = '-';
+        let winner = null;
+        let done = false;
+        
+        if (match.skorA !== null && match.skorA !== undefined) {
+            score1 = String(match.skorA);
+            score2 = String(match.skorB);
+            done = true;
+            if (parseInt(match.skorA) > parseInt(match.skorB)) {
+                winner = match.timA;
+            } else if (parseInt(match.skorB) > parseInt(match.skorA)) {
+                winner = match.timB;
+            }
+        }
+        
+        const matchDate = match.tanggal || 'TBA';
+        const matchTime = match.waktu || '19:00';
+        
+        brackets[sportId][side][roundKey].push({
+            id: match.id,
+            team1: match.timA,
+            team2: match.timB,
+            score1: score1,
+            score2: score2,
+            winner: winner,
+            done: done,
+            date: matchDate,
+            time: matchTime
         });
-        
-        return brackets;
-        
-    } catch (error) {
-        console.error('Error getBracketData:', error);
-        return {};
-    }
+    });
+    
+    console.log('✅ Processed brackets:', brackets);
+    return brackets;
+    
+} catch (error) {
+    console.error('Error getBracketData:', error);
+    return {};
+}
 }
 
 async function saveBracketData(brackets) {
