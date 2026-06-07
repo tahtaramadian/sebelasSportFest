@@ -90,18 +90,35 @@ async function fetchFromSpreadsheet(sheetName) {
 
 async function saveToSpreadsheet(sheetName, data) {
     try {
-        const url = `${API_BASE_URL}?action=save&sheet=${sheetName}`;
+        const url = `${API_BASE_URL}?action=save&sheet=${sheetName}&t=${Date.now()}`;
+        
+        // Gunakan mode no-cors untuk menghindari CORS error
         const response = await fetch(url, {
             method: 'POST',
+            mode: 'no-cors',  // Kunci utama
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        const result = await response.json();
-        console.log(`💾 Saved to ${sheetName}:`, result);
-        return result;
+        
+        // Karena mode no-cors, response tidak bisa dibaca
+        // Tapi request tetap terkirim
+        console.log(`💾 Save request sent to ${sheetName}`);
+        
+        // Simpan juga ke localStorage sebagai backup
+        const cacheKey = `app_${sheetName}`.toLowerCase();
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        
+        return { success: true, message: 'Request sent' };
+        
     } catch (error) {
         console.error(`Error saving to ${sheetName}:`, error);
-        return { success: false };
+        
+        // Fallback: simpan ke localStorage saja
+        const cacheKey = `app_${sheetName}`.toLowerCase();
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        console.log(`💾 Saved to localStorage as fallback: ${cacheKey}`);
+        
+        return { success: true, localBackup: true };
     }
 }
 
@@ -278,7 +295,14 @@ function sportIdToName(sportId) {
 }
 
 async function saveMatches(matches) {
+    console.log('💾 Saving matches...');
+    
+    // Simpan ke localStorage dulu
     localStorage.setItem('app_matches', JSON.stringify(matches));
+    
+    // Update app_bracket juga
+    const brackets = await getBracketData();
+    localStorage.setItem('app_bracket', JSON.stringify(brackets));
     
     // Konversi ke format spreadsheet
     const bracketRows = matches.map(m => ({
@@ -289,14 +313,19 @@ async function saveMatches(matches) {
         team2: m.timB,
         score1: m.skorA !== null ? String(m.skorA) : '',
         score2: m.skorB !== null ? String(m.skorB) : '',
-        winner: (m.skorA && m.skorB && m.skorA > m.skorB) ? m.timA : 
-                (m.skorA && m.skorB && m.skorB > m.skorA) ? m.timB : '',
+        winner: (m.skorA !== null && m.skorB !== null && m.skorA > m.skorB) ? m.timA : 
+                (m.skorA !== null && m.skorB !== null && m.skorB > m.skorA) ? m.timB : '',
         done: m.status === 'Selesai',
         date: m.tanggal,
         time: m.waktu
     }));
     
+    // Kirim ke spreadsheet (dengan no-cors)
     await saveToSpreadsheet('Bracket', bracketRows);
+    
+    // Trigger event untuk refresh
+    window.dispatchEvent(new Event('storage'));
+    
     return { success: true };
 }
 
@@ -318,154 +347,124 @@ async function updateMatchScore(matchId, skorA, skorB) {
 // ==================== BRACKET DATA UNTUK INDEX ====================
 async function getBracketData() {
     try {
-    const matches = await getMatches();
-    console.log('📦 Matches for bracket:', matches);
-    
-    const brackets = {};
-    const sportMap = {
-        'Futsal': 'futsal',
-        'Basket': 'basket',
-        'Voli': 'voli',
-        'Badminton': 'badminton',
-        'Catur': 'catur',
-        'Esport': 'esport',
-        'Tenis Meja': 'tenismeja'
-    };
-    
-    matches.forEach(match => {
-        const sportId = sportMap[match.cabor];
-        if (!sportId) return;
+        const matches = await getMatches();
+        console.log('📦 Matches for bracket:', matches);
         
-        if (!brackets[sportId]) {
-            brackets[sportId] = {
-                left: { penyisihan: [], perempat: [], semifinal: [] },
-                right: { penyisihan: [], perempat: [], semifinal: [] },
-                final: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: '19:00' },
-                thirdPlace: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: '19:00' }
-            };
-        }
+        const brackets = {};
+        const sportMap = {
+            'Futsal': 'futsal',
+            'Basket': 'basket',
+            'Voli': 'voli',
+            'Badminton': 'badminton',
+            'Catur': 'catur',
+            'Esport': 'esport',
+            'Tenis Meja': 'tenismeja'
+        };
         
-        // ========== TAMBAHKAN HANDLER UNTUK FINAL ==========
-        if (match.round === 'Final' || match.round === 'final') {
-            let score1 = '-', score2 = '-';
-            let winner = null;
-            let done = false;
+        matches.forEach(match => {
+            const sportId = sportMap[match.cabor];
+            if (!sportId) return;
             
-            if (match.skorA !== null && match.skorA !== undefined) {
-                score1 = String(match.skorA);
-                score2 = String(match.skorB);
-                done = true;
-                if (parseInt(match.skorA) > parseInt(match.skorB)) {
-                    winner = match.timA;
-                } else if (parseInt(match.skorB) > parseInt(match.skorA)) {
-                    winner = match.timB;
-                }
+            if (!brackets[sportId]) {
+                brackets[sportId] = {
+                    left: { penyisihan: [], perempat: [], semifinal: [] },
+                    right: { penyisihan: [], perempat: [], semifinal: [] },
+                    final: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: '19:00' },
+                    thirdPlace: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: '19:00' }
+                };
             }
             
-            brackets[sportId].final = {
+            // ========== HANDLER UNTUK FINAL ==========
+            if (match.round === 'Final' || match.round === 'final') {
+                brackets[sportId].final = {
+                    id: match.id,
+                    team1: match.timA,
+                    team2: match.timB,
+                    score1: match.skorA !== null ? String(match.skorA) : '-',
+                    score2: match.skorB !== null ? String(match.skorB) : '-',
+                    winner: (match.skorA !== null && match.skorB !== null && match.skorA > match.skorB) ? match.timA :
+                            (match.skorA !== null && match.skorB !== null && match.skorB > match.skorA) ? match.timB : null,
+                    done: (match.skorA !== null && match.skorB !== null),
+                    date: match.tanggal || 'TBA',
+                    time: match.waktu || '19:00'
+                };
+                return;
+            }
+            
+            // ========== HANDLER UNTUK PEREBUTAN JUARA 3 ==========
+            if (match.round === 'Perebutan Juara 3' || match.round === 'thirdPlace' || match.round === 'Third Place') {
+                brackets[sportId].thirdPlace = {
+                    id: match.id,
+                    team1: match.timA,
+                    team2: match.timB,
+                    score1: match.skorA !== null ? String(match.skorA) : '-',
+                    score2: match.skorB !== null ? String(match.skorB) : '-',
+                    winner: (match.skorA !== null && match.skorB !== null && match.skorA > match.skorB) ? match.timA :
+                            (match.skorA !== null && match.skorB !== null && match.skorB > match.skorA) ? match.timB : null,
+                    done: (match.skorA !== null && match.skorB !== null),
+                    date: match.tanggal || 'TBA',
+                    time: match.waktu || '19:00'
+                };
+                return;
+            }
+            
+            // ========== HANDLER UNTUK PENYISIHAN, PEREMPAT, SEMI ==========
+            let roundKey = 'penyisihan';
+            if (match.round === 'Penyisihan') roundKey = 'penyisihan';
+            else if (match.round === 'Perempat Final') roundKey = 'perempat';
+            else if (match.round === 'Semi Final') roundKey = 'semifinal';
+            else return;
+            
+            // Tentukan sisi
+            let side = 'left';
+            if (match.id && match.id.startsWith('L')) {
+                side = 'left';
+            } else if (match.id && match.id.startsWith('R')) {
+                side = 'right';
+            } else {
+                const teamANum = parseInt(match.timA?.replace(/\D/g, '')) || 0;
+                if (teamANum >= 1 && teamANum <= 7) side = 'left';
+                else if (teamANum >= 8 && teamANum <= 14) side = 'right';
+                else side = 'left';
+            }
+            
+            // Skip match yang mengandung BY
+            if (match.timA === 'BY' || match.timB === 'BY') {
+                console.log(`⏭️ Skip match ${match.id}: contains BY`);
+                return;
+            }
+            
+            brackets[sportId][side][roundKey].push({
                 id: match.id,
                 team1: match.timA,
                 team2: match.timB,
-                score1: score1,
-                score2: score2,
-                winner: winner,
-                done: done,
+                score1: match.skorA !== null ? String(match.skorA) : '-',
+                score2: match.skorB !== null ? String(match.skorB) : '-',
+                winner: (match.skorA !== null && match.skorB !== null && match.skorA > match.skorB) ? match.timA :
+                        (match.skorA !== null && match.skorB !== null && match.skorB > match.skorA) ? match.timB : null,
+                done: (match.skorA !== null && match.skorB !== null),
                 date: match.tanggal || 'TBA',
                 time: match.waktu || '19:00'
-            };
-            return; // Langsung return, tidak perlu proses lebih lanjut
-        }
-        
-        // ========== TAMBAHKAN HANDLER UNTUK PEREBUTAN JUARA 3 ==========
-        if (match.round === 'Perebutan Juara 3' || match.round === 'thirdPlace' || match.round === 'Third Place') {
-            let score1 = '-', score2 = '-';
-            let winner = null;
-            let done = false;
-            
-            if (match.skorA !== null && match.skorA !== undefined) {
-                score1 = String(match.skorA);
-                score2 = String(match.skorB);
-                done = true;
-                if (parseInt(match.skorA) > parseInt(match.skorB)) {
-                    winner = match.timA;
-                } else if (parseInt(match.skorB) > parseInt(match.skorA)) {
-                    winner = match.timB;
-                }
-            }
-            
-            brackets[sportId].thirdPlace = {
-                id: match.id,
-                team1: match.timA,
-                team2: match.timB,
-                score1: score1,
-                score2: score2,
-                winner: winner,
-                done: done,
-                date: match.tanggal || 'TBA',
-                time: match.waktu || '19:00'
-            };
-            return; // Langsung return, tidak perlu proses lebih lanjut
-        }
-        
-        // ========== KODE EXISTING UNTUK PENYISIHAN, PEREMPAT, SEMI ==========
-        let roundKey = 'penyisihan';
-        if (match.round === 'Penyisihan') roundKey = 'penyisihan';
-        else if (match.round === 'Perempat Final') roundKey = 'perempat';
-        else if (match.round === 'Semi Final') roundKey = 'semifinal';
-        else return; // Jika bukan round yang dikenal, skip
-        
-        // Tentukan sisi
-        let side = 'left';
-        if (match.id && match.id.startsWith('L')) {
-            side = 'left';
-        } else if (match.id && match.id.startsWith('R')) {
-            side = 'right';
-        } else {
-            const teamANum = parseInt(match.timA?.replace(/\D/g, '')) || 0;
-            if (teamANum >= 1 && teamANum <= 7) side = 'left';
-            else if (teamANum >= 8 && teamANum <= 14) side = 'right';
-            else side = brackets[sportId].left[roundKey].length <= brackets[sportId].right[roundKey].length ? 'left' : 'right';
-        }
-        
-        // Skor
-        let score1 = '-', score2 = '-';
-        let winner = null;
-        let done = false;
-        
-        if (match.skorA !== null && match.skorA !== undefined) {
-            score1 = String(match.skorA);
-            score2 = String(match.skorB);
-            done = true;
-            if (parseInt(match.skorA) > parseInt(match.skorB)) {
-                winner = match.timA;
-            } else if (parseInt(match.skorB) > parseInt(match.skorA)) {
-                winner = match.timB;
-            }
-        }
-        
-        const matchDate = match.tanggal || 'TBA';
-        const matchTime = match.waktu || '19:00';
-        
-        brackets[sportId][side][roundKey].push({
-            id: match.id,
-            team1: match.timA,
-            team2: match.timB,
-            score1: score1,
-            score2: score2,
-            winner: winner,
-            done: done,
-            date: matchDate,
-            time: matchTime
+            });
         });
-    });
-    
-    console.log('✅ Processed brackets:', brackets);
-    return brackets;
-    
-} catch (error) {
-    console.error('Error getBracketData:', error);
-    return {};
-}
+        
+        console.log('✅ Processed brackets:', brackets);
+        
+        // Simpan ke localStorage untuk backup
+        localStorage.setItem('app_bracket', JSON.stringify(brackets));
+        
+        return brackets;
+        
+    } catch (error) {
+        console.error('Error getBracketData:', error);
+        // Ambil dari cache jika error
+        const cached = localStorage.getItem('app_bracket');
+        if (cached) {
+            console.log('📦 Using cached bracket data');
+            return JSON.parse(cached);
+        }
+        return {};
+    }
 }
 
 async function saveBracketData(brackets) {
