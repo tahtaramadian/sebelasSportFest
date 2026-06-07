@@ -15,7 +15,59 @@ const DEFAULT_PARTICIPANTS = [
 const DEFAULT_ANNOUNCEMENTS = [
     { id: 'a1', judul: 'Pembukaan Lomba', isi: 'Acara pembukaan 10 Agustus 2025', penting: true, date: new Date().toISOString() },
 ];
-
+// ==================== FUNGSI CALL API LANGSUNG ====================
+async function callAPI(action, sheet, data = null) {
+    const url = `${API_BASE_URL}?action=${action}&sheet=${sheet}&t=${Date.now()}`;
+    
+    const options = {
+        method: data ? 'POST' : 'GET',
+        mode: 'no-cors',  // Ganti dari 'cors' ke 'no-cors'
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    };
+    
+    if (data) {
+        options.body = JSON.stringify(data);
+        console.log(`📤 POST to ${sheet}:`, data.length, 'records');
+    } else {
+        console.log(`📥 GET from ${sheet}`);
+    }
+    
+    try {
+        const response = await fetch(url, options);
+        
+        // Karena mode 'no-cors', response tidak bisa dibaca
+        // Tapi request tetap terkirim
+        console.log(`✅ ${action} request sent to ${sheet}`);
+        
+        // Untuk GET, kita perlu data dari cache
+        if (action === 'get') {
+            // Coba ambil dari localStorage dulu
+            const cacheKey = `app_${sheet}`.toLowerCase();
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                console.log(`📦 Using cached ${sheet} data`);
+                return JSON.parse(cached);
+            }
+        }
+        
+        return [];
+        
+    } catch (error) {
+        console.error(`❌ ${action} error:`, error);
+        
+        // Fallback ke cache
+        if (action === 'get') {
+            const cacheKey = `app_${sheet}`.toLowerCase();
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                return JSON.parse(cached);
+            }
+        }
+        return [];
+    }
+}
 // ==================== AMBIL DATA DARI SPREADSHEET ====================
 async function fetchFromSpreadsheet(sheetName) {
     try {
@@ -144,40 +196,85 @@ async function saveSettings(settings) {
 // ==================== BRACKET / MATCH ====================
 async function getMatches() {
     try {
-        const spreadsheetData = await fetchFromSpreadsheet('Bracket');
+        const spreadsheetData = await callAPI('get', 'Bracket');
+        console.log('📊 Raw spreadsheet data:', spreadsheetData);
         
         if (spreadsheetData && spreadsheetData.length > 0) {
-            const matches = spreadsheetData.map(row => ({
-                id: row.matchId,
-                cabor: sportIdToName(row.sportId),
-                timA: row.team1,
-                timB: row.team2,
-                skorA: row.score1 && row.score1 !== '-' && row.score1 !== '' ? parseInt(row.score1) : null,
-                skorB: row.score2 && row.score2 !== '-' && row.score2 !== '' ? parseInt(row.score2) : null,
-                status: (row.done === true || row.done === 'TRUE' || row.done === 'true') ? 'Selesai' : 'Terjadwal',
-                round: row.round,
-                tanggal: formatDateFromSpreadsheet(row.date),
-                waktu: formatTimeFromSpreadsheet(row.time)
-            }));
+            const matches = spreadsheetData.map(row => {
+                // Parse skor - perhatikan nilai 0
+                let skorA = null;
+                let skorB = null;
+                
+                // Cek score1 - nilai 0 harus tetap diproses
+                if (row.score1 !== undefined && row.score1 !== null && row.score1 !== '-') {
+                    // Jangan gunakan && row.score1 karena 0 akan dianggap falsy
+                    const parsed = parseInt(row.score1);
+                    if (!isNaN(parsed)) {
+                        skorA = parsed;
+                    }
+                }
+                
+                // Cek score2
+                if (row.score2 !== undefined && row.score2 !== null && row.score2 !== '-') {
+                    const parsed = parseInt(row.score2);
+                    if (!isNaN(parsed)) {
+                        skorB = parsed;
+                    }
+                }
+                
+                console.log(`Match ${row.team1} vs ${row.team2}: raw scores = ${row.score1}|${row.score2} -> parsed = ${skorA}|${skorB}`);
+                
+                // Parse status done
+                let isDone = false;
+                if (row.done === true || row.done === 'TRUE' || row.done === 'true' || row.done === 1) {
+                    isDone = true;
+                }
+                
+                return {
+                    id: row.matchId || row.id,
+                    cabor: sportIdToName(row.sportId),
+                    timA: row.team1,
+                    timB: row.team2,
+                    skorA: skorA,
+                    skorB: skorB,
+                    status: isDone ? 'Selesai' : 'Terjadwal',
+                    round: row.round,
+                    tanggal: row.date || 'TBA',
+                    waktu: row.time || '19:00'
+                };
+            });
             
-            // Filter hanya match yang valid (team1 dan team2 ada)
-            const validMatches = matches.filter(m => m.timA && m.timB);
+            // Filter hanya match yang valid
+            const validMatches = matches.filter(m => m.timA && m.timB && m.timA !== 'BY' && m.timB !== 'BY');
+            console.log(`✅ Valid matches: ${validMatches.length}`);
+            
+            // Simpan ke cache
             localStorage.setItem('app_matches', JSON.stringify(validMatches));
             return validMatches;
         }
         
         // Fallback ke localStorage
         const data = localStorage.getItem('app_matches');
-        if (data) {
-            return JSON.parse(data);
-        }
-        
-        return [];
+        return data ? JSON.parse(data) : [];
         
     } catch (error) {
         console.error('Error getMatches:', error);
         return [];
     }
+}
+
+// Helper function
+function sportIdToName(sportId) {
+    const map = {
+        'futsal': 'Futsal',
+        'basket': 'Basket',
+        'voli': 'Voli',
+        'badminton': 'Badminton',
+        'catur': 'Catur',
+        'esport': 'Esport',
+        'tenismeja': 'Tenis Meja'
+    };
+    return map[sportId] || sportId;
 }
 
 async function saveMatches(matches) {
@@ -377,18 +474,7 @@ async function saveBracketData(brackets) {
 }
 
 // ==================== HELPER FUNCTIONS ====================
-function sportIdToName(sportId) {
-    const map = {
-        'futsal': 'Futsal',
-        'basket': 'Basket',
-        'voli': 'Voli',
-        'badminton': 'Badminton',
-        'catur': 'Catur',
-        'esport': 'Esport',
-        'tenismeja': 'Tenis Meja'
-    };
-    return map[sportId?.toLowerCase()] || sportId;
-}
+
 
 function nameToSportId(name) {
     const map = {
