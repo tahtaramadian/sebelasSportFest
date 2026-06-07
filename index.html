@@ -3434,28 +3434,290 @@ function exportParticipantsToCSV() {
 // ============================
 // SCHEDULE
 // ============================
-function renderSchedule() {
-    const typeColors = { meeting:'bg-blue-500', opening:'bg-red-500', sport:'bg-green-500', ceremony:'bg-yellow-500', peak:'bg-purple-500' };
-    document.getElementById('scheduleTimeline').innerHTML = SCHEDULES.map(s => `
-        <div class="relative pl-6">
-            <div class="absolute -left-3 top-0 w-6 h-6 ${typeColors[s.type]} rounded-full border-4 border-white dark:border-gray-900"></div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 hover:shadow-lg transition">
-                <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 ${typeColors[s.type]} rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                        <i class="fas ${s.icon}"></i>
+async function renderSchedule() {
+    try {
+        // Ambil semua match dari bracket
+        const brackets = await getBracketData();
+        const allMatches = [];
+        
+        // Kumpulkan semua match dari semua cabang
+        for (let sportId in brackets) {
+            const sport = brackets[sportId];
+            if (!sport) continue;
+            
+            // Nama cabang olahraga
+            const sportNames = {
+                futsal: 'Futsal', basket: 'Basket', voli: 'Voli',
+                badminton: 'Badminton', catur: 'Catur', esport: 'Esport', tenismeja: 'Tenis Meja'
+            };
+            const sportName = sportNames[sportId] || sportId;
+            
+            // Kumpulkan match dari left bracket
+            if (sport.left) {
+                if (sport.left.penyisihan) {
+                    sport.left.penyisihan.forEach(m => {
+                        if (m.team1 && m.team2 && m.team1 !== 'BY' && m.team2 !== 'BY') {
+                            allMatches.push({
+                                title: `${sportName} - Penyisihan`,
+                                date: m.date,
+                                time: m.time,
+                                loc: 'Lapangan RW XI',
+                                type: 'sport',
+                                icon: getSportIcon(sportId),
+                                team1: m.team1,
+                                team2: m.team2
+                            });
+                        }
+                    });
+                }
+                if (sport.left.perempat) {
+                    sport.left.perempat.forEach(m => {
+                        if (m.team1 && m.team2) {
+                            allMatches.push({
+                                title: `${sportName} - Perempat Final`,
+                                date: m.date,
+                                time: m.time,
+                                loc: 'Lapangan RW XI',
+                                type: 'sport',
+                                icon: getSportIcon(sportId),
+                                team1: m.team1,
+                                team2: m.team2
+                            });
+                        }
+                    });
+                }
+                if (sport.left.semifinal) {
+                    sport.left.semifinal.forEach(m => {
+                        if (m.team1 && m.team2) {
+                            allMatches.push({
+                                title: `${sportName} - Semi Final`,
+                                date: m.date,
+                                time: m.time,
+                                loc: 'Lapangan RW XI',
+                                type: 'sport',
+                                icon: getSportIcon(sportId),
+                                team1: m.team1,
+                                team2: m.team2
+                            });
+                        }
+                    });
+                }
+            }
+            
+            // Kumpulkan match dari right bracket
+            if (sport.right) {
+                if (sport.right.penyisihan) {
+                    sport.right.penyisihan.forEach(m => {
+                        if (m.team1 && m.team2 && m.team1 !== 'BY' && m.team2 !== 'BY') {
+                            allMatches.push({
+                                title: `${sportName} - Penyisihan`,
+                                date: m.date,
+                                time: m.time,
+                                loc: 'Lapangan RW XI',
+                                type: 'sport',
+                                icon: getSportIcon(sportId),
+                                team1: m.team1,
+                                team2: m.team2
+                            });
+                        }
+                    });
+                }
+                if (sport.right.perempat) {
+                    sport.right.perempat.forEach(m => {
+                        if (m.team1 && m.team2) {
+                            allMatches.push({
+                                title: `${sportName} - Perempat Final`,
+                                date: m.date,
+                                time: m.time,
+                                loc: 'Lapangan RW XI',
+                                type: 'sport',
+                                icon: getSportIcon(sportId),
+                                team1: m.team1,
+                                team2: m.team2
+                            });
+                        }
+                    });
+                }
+                if (sport.right.semifinal) {
+                    sport.right.semifinal.forEach(m => {
+                        if (m.team1 && m.team2) {
+                            allMatches.push({
+                                title: `${sportName} - Semi Final`,
+                                date: m.date,
+                                time: m.time,
+                                loc: 'Lapangan RW XI',
+                                type: 'sport',
+                                icon: getSportIcon(sportId),
+                                team1: m.team1,
+                                team2: m.team2
+                            });
+                        }
+                    });
+                }
+            }
+            
+            // Final
+            if (sport.final && sport.final.team1 && sport.final.team2) {
+                allMatches.push({
+                    title: `${sportName} - FINAL`,
+                    date: sport.final.date,
+                    time: sport.final.time,
+                    loc: 'Lapangan Utama RW XI',
+                    type: 'peak',
+                    icon: 'fa-trophy',
+                    team1: sport.final.team1,
+                    team2: sport.final.team2
+                });
+            }
+            
+            // Perebutan Juara 3
+            if (sport.thirdPlace && sport.thirdPlace.team1 && sport.thirdPlace.team2) {
+                allMatches.push({
+                    title: `${sportName} - Perebutan Juara 3`,
+                    date: sport.thirdPlace.date,
+                    time: sport.thirdPlace.time,
+                    loc: 'Lapangan RW XI',
+                    type: 'sport',
+                    icon: 'fa-medal',
+                    team1: sport.thirdPlace.team1,
+                    team2: sport.thirdPlace.team2
+                });
+            }
+        }
+        
+        // Filter match yang memiliki tanggal valid
+        const validMatches = allMatches.filter(m => m.date && m.date !== 'TBA');
+        
+        // Urutkan berdasarkan tanggal
+        validMatches.sort((a, b) => {
+            const dateA = parseDate(a.date);
+            const dateB = parseDate(b.date);
+            return dateA - dateB;
+        });
+        
+        // Kelompokkan berdasarkan tanggal
+        const groupedByDate = {};
+        validMatches.forEach(match => {
+            const dateKey = match.date;
+            if (!groupedByDate[dateKey]) {
+                groupedByDate[dateKey] = [];
+            }
+            groupedByDate[dateKey].push(match);
+        });
+        
+        // Generate HTML
+        if (validMatches.length === 0) {
+            document.getElementById('scheduleTimeline').innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-calendar-alt text-4xl mb-2 opacity-50"></i>
+                    <p>Belum ada jadwal pertandingan</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        for (let date in groupedByDate) {
+            const matches = groupedByDate[date];
+            html += `
+                <div class="mb-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-1 h-6 bg-red-600 rounded-full"></div>
+                        <h3 class="font-bold text-lg">📅 ${formatDisplayDate(date)}</h3>
+                        <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full">${matches.length} pertandingan</span>
                     </div>
-                    <div class="flex-1">
-                        <h3 class="font-bold text-base">${s.title}</h3>
-                        <div class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 mt-1">
-                            <span><i class="far fa-calendar mr-1"></i>${s.date}</span>
-                            <span><i class="far fa-clock mr-1"></i>${s.time}</span>
-                            <span><i class="fas fa-map-marker-alt mr-1"></i>${s.loc}</span>
+                    <div class="space-y-3">
+            `;
+            
+            matches.forEach(m => {
+                const typeColors = { 
+                    meeting: 'bg-blue-500', 
+                    opening: 'bg-red-500', 
+                    sport: 'bg-green-500', 
+                    ceremony: 'bg-yellow-500', 
+                    peak: 'bg-purple-500' 
+                };
+                const typeColor = typeColors[m.type] || 'bg-green-500';
+                
+                html += `
+                    <div class="relative pl-6">
+                        <div class="absolute -left-3 top-0 w-6 h-6 ${typeColor} rounded-full border-4 border-white dark:border-gray-900"></div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 hover:shadow-lg transition">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 ${typeColor} rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                                    <i class="fas ${m.icon || 'fa-futbol'}"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-base">${m.title}</h3>
+                                    <div class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                        <span><i class="far fa-clock mr-1"></i>${m.time || 'TBA'} WIB</span>
+                                        <span><i class="fas fa-map-marker-alt mr-1"></i>${m.loc}</span>
+                                    </div>
+                                    <div class="text-sm mt-2">
+                                        <span class="font-semibold">${m.team1}</span>
+                                        <span class="mx-2">vs</span>
+                                        <span class="font-semibold">${m.team2}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                `;
+            });
+            
+            html += `
+                    </div>
                 </div>
+            `;
+        }
+        
+        document.getElementById('scheduleTimeline').innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error renderSchedule:', error);
+        document.getElementById('scheduleTimeline').innerHTML = `
+            <div class="text-center py-8 text-red-500">
+                <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+                <p>Gagal memuat jadwal</p>
             </div>
-        </div>
-    `).join('');
+        `;
+    }
+}
+
+// Helper function
+function getSportIcon(sportId) {
+    const icons = {
+        futsal: 'fa-futbol',
+        basket: 'fa-basketball-ball',
+        voli: 'fa-volleyball-ball',
+        badminton: 'fa-shuttlecock',
+        catur: 'fa-chess',
+        esport: 'fa-gamepad',
+        tenismeja: 'fa-table-tennis'
+    };
+    return icons[sportId] || 'fa-trophy';
+}
+
+function parseDate(dateStr) {
+    if (!dateStr || dateStr === 'TBA') return new Date(9999, 11, 31);
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(dateStr);
+}
+
+function formatDisplayDate(dateStr) {
+    if (!dateStr || dateStr === 'TBA') return 'Jadwal Menyusul';
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+        const day = parseInt(parts[0]);
+        const month = parseInt(parts[1]);
+        const year = parts[2];
+        const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        return `${day} ${bulan[month - 1]} ${year}`;
+    }
+    return dateStr;
 }
 
 // ============================
@@ -4108,22 +4370,48 @@ async function refreshBracketData() {
 
 // Fungsi renderMatchCard
 function renderMatchCard(match) {
-    if (!match) return '<div class="match-card"><div class="team">__________</div><div class="team">__________</div></div>';
+    if (!match) return '<div class="match-card"><div class="team"><span class="team-name">__________</span><span class="team-score">-</span></div><div class="team"><span class="team-name">__________</span><span class="team-score">-</span></div></div>';
+    
+    const dateDisplay = match.date || 'TBA';
+    const timeDisplay = match.time || 'TBA';
+    
+    // Cek apakah match kosong
+    if (!match.team1 && !match.team2) {
+        return `
+            <div class="match-card">
+                <div class="text-xs text-center bg-gray-100 dark:bg-gray-800 py-1 text-gray-500 rounded-t-lg">
+                    <i class="fas fa-calendar-alt mr-1"></i>${dateDisplay} | <i class="fas fa-clock mr-1"></i>${timeDisplay}
+                </div>
+                <div class="team">
+                    <span class="team-name">__________</span>
+                    <span class="team-score">-</span>
+                </div>
+                <div class="team">
+                    <span class="team-name">__________</span>
+                    <span class="team-score">-</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Tampilkan skor - perhatikan pengecekan untuk nilai 0
+    const score1Display = (match.score1 !== undefined && match.score1 !== null && match.score1 !== '-') ? match.score1 : '-';
+    const score2Display = (match.score2 !== undefined && match.score2 !== null && match.score2 !== '-') ? match.score2 : '-';
     
     return `
         <div class="match-card">
             <div class="text-xs text-center bg-gray-100 dark:bg-gray-800 py-1 text-gray-500 rounded-t-lg">
-                <i class="fas fa-calendar-alt mr-1"></i>${match.date || 'TBA'} | <i class="fas fa-clock mr-1"></i>${match.time || '19:00'}
+                <i class="fas fa-calendar-alt mr-1"></i>${dateDisplay} | <i class="fas fa-clock mr-1"></i>${timeDisplay}
             </div>
             <div class="team ${match.winner === match.team1 ? 'winner' : ''}">
                 <span class="team-name">${match.team1 || '__________'}</span>
-                <span class="team-score">${match.score1 || '-'}</span>
+                <span class="team-score">${score1Display}</span>
             </div>
             <div class="team ${match.winner === match.team2 ? 'winner' : ''}">
                 <span class="team-name">${match.team2 || '__________'}</span>
-                <span class="team-score">${match.score2 || '-'}</span>
+                <span class="team-score">${score2Display}</span>
             </div>
-            ${match.done ? `<div class="text-center text-xs text-green-600 py-1">🏆 ${match.winner}</div>` : ''}
+            ${match.winner ? `<div class="text-center text-xs text-green-600 py-1">🏆 ${match.winner}</div>` : ''}
         </div>
     `;
 }
