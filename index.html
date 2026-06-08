@@ -114,7 +114,7 @@
     padding: 8px 12px;
     background: #1e293b;
     color: white;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 13px;
     margin-bottom: 20px;
     flex-shrink: 0; /* Judul tidak ikut flex */
@@ -1097,19 +1097,6 @@ const SPORTS = [{
 ];
 
 
-
-
-const SCHEDULES = [
-    { date:'10 Agu 2025', time:'19:00', title:'Technical Meeting', loc:'Aula RW XI', type:'meeting', icon:'fa-users-cog' },
-    { date:'15 Agu 2025', time:'08:00', title:'Pembukaan & Upacara', loc:'Lapangan RW XI', type:'opening', icon:'fa-flag' },
-    { date:'15 Agu 2025', time:'13:00', title:'Turnamen Futsal Dimulai', loc:'Lapangan Futsal', type:'sport', icon:'fa-futbol' },
-    { date:'16 Agu 2025', time:'08:00', title:'Turnamen Basket & Voli', loc:'Lapangan Sport Center', type:'sport', icon:'fa-basketball-ball' },
-    { date:'16 Agu 2025', time:'10:00', title:'Catur & Tenis Meja', loc:'Aula RW XI', type:'sport', icon:'fa-chess' },
-    { date:'16 Agu 2025', time:'14:00', title:'Badminton & E-Sport', loc:'Aula & Balai Warga', type:'sport', icon:'fa-gamepad' },
-    { date:'17 Agu 2025', time:'07:00', title:'Upacara HUT RI ke-80', loc:'Lapangan Utama', type:'ceremony', icon:'fa-star' },
-    { date:'17 Agu 2025', time:'19:00', title:'Malam Puncak & Pembagian Hadiah', loc:'Panggung Utama', type:'peak', icon:'fa-trophy' }
-];
-
 const STANDINGS = [
     { rt:'RT 01', emas:0, perak:0, perunggu:0, poin:0 },
     { rt:'RT 02', emas:0, perak:0, perunggu:0, poin:0 },
@@ -1143,11 +1130,7 @@ const GALLERY = [
     { cat:'juara', title:'Para Pemenang', count:20 }
 ];
 
-
-
-
-// ==================== PENGUMUMAN ====================
-
+// ==================== RENDER PENGUMUMAN ====================
 async function renderAnnouncements() {
     try {
         let announcements = await getAnnouncements();
@@ -1780,7 +1763,7 @@ function renderSports() {
     `).join('');
 }
 
-async function showSportDetail(id) {
+ async function showSportDetail(id) {
     const sport = SPORTS.find(s => s.id === id);
     if (!sport) return;
     
@@ -1816,7 +1799,7 @@ async function showSportDetail(id) {
         }
         return new Date(dateStr);
     };
-    
+
     // Kumpulkan semua match dari semua babak
     const allMatches = [];
     
@@ -1965,7 +1948,7 @@ async function showSportDetail(id) {
     
     matchesHtml += '</div>';
     
-// Helper format tanggal menjadi "14 Juni 2026"
+   // Helper format tanggal menjadi "14 Juni 2026"
 function formatDisplayDate(dateStr) {
     if (!dateStr || dateStr === 'TBA') return 'Jadwal Menyusul';
     
@@ -2030,11 +2013,7 @@ function formatDisplayDateWithDay(dateStr) {
     
     return dateStr;
 }
-
-
-
-    
-    document.getElementById('sportDetailContent').innerHTML = `
+document.getElementById('sportDetailContent').innerHTML = `
         <div class="bg-gradient-to-r ${sport.color} rounded-2xl p-8 text-white mb-6">
             <h2 class="text-4xl font-black mb-2">
                 <i class="fas ${sport.icon} mr-2"></i>${sport.name}
@@ -2099,8 +2078,7 @@ function formatDisplayDateWithDay(dateStr) {
     
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
-    
-  
+
 function backToSports() {
     document.getElementById('sportsGrid').classList.remove('hidden');
     document.getElementById('sportDetail').classList.add('hidden');
@@ -2694,8 +2672,8 @@ function displayParticipants() {
                             <th class="px-4 py-2">Nama Peserta</th>
                             <th class="px-4 py-2">RT</th>
                             <th class="px-4 py-2">Olahraga</th>
-                            <th class="px-4 py-2">No telpon</th>
-                            <th class="px-4 py-2">status</th>
+                            <th class="px-4 py-2">No HP</th>
+                            <th class="px-4 py-2">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3623,7 +3601,7 @@ async function renderSchedule() {
                 <div class="mb-4">
                     <div class="flex items-center gap-2 mb-3">
                         <div class="w-1 h-6 bg-red-600 rounded-full"></div>
-                        <h3 class="font-bold text-lg">📅 ${formatDisplayDate(date)}</h3>
+                        <h3 class="font-bold text-lg">📅 ${formatDisplayDateWithDay(date)}</h3>
                         <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full">${matches.length} pertandingan</span>
                     </div>
                     <div class="space-y-3">
@@ -3706,20 +3684,25 @@ function parseDate(dateStr) {
     }
     return new Date(dateStr);
 }
-
-function formatDisplayDate(dateStr) {
+// Format dengan hari: "Minggu, 14 Juni 2026"
+function formatDisplayDateWithDay(dateStr) {
     if (!dateStr || dateStr === 'TBA') return 'Jadwal Menyusul';
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-        const day = parseInt(parts[0]);
-        const month = parseInt(parts[1]);
-        const year = parts[2];
-        const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        return `${day} ${bulan[month - 1]} ${year}`;
+    
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const year = parts[2];
+            const date = new Date(year, month - 1, day);
+            const dayName = days[date.getDay()];
+            const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            return `${dayName}, ${day} ${bulan[month - 1]} ${year}`;
+        }
     }
-    return dateStr;
 }
-
 // ============================
 // BRACKET
 // ============================
@@ -3767,7 +3750,7 @@ function getDefaultBracket() {
             score2: '-',
             winner: null,
             done: false,
-            date: '-',
+            date: '',
             time: ''
         },
         // TAMBAHKAN INI - Perebutan Juara 3
@@ -3780,7 +3763,7 @@ function getDefaultBracket() {
             winner: null,
             done: false,
             date: '',
-            time: '-'
+            time: ''
         }
     };
 }
@@ -4184,12 +4167,95 @@ async function renderBracket() {
         
         // Jika ada data untuk cabang yang dipilih, gunakan, jika tidak buat default kosong
         if (brackets && brackets[currentBracket]) {
-            mainBracket = brackets[currentBracket];
+            const rawData = brackets[currentBracket];
+            
+            // PISAHKAN DATA: Ambil THIRD dari penyisihan jika ada
+            let penyisihanLeft = rawData.left?.penyisihan || [];
+            let penyisihanRight = rawData.right?.penyisihan || [];
+            let finalMatch = rawData.final || null;
+            let thirdMatch = rawData.thirdPlace || null;
+            
+            // Cari dan pindahkan THIRD dari array penyisihan ke thirdPlace
+            if (penyisihanLeft && penyisihanLeft.length > 0) {
+                const thirdIndex = penyisihanLeft.findIndex(m => m.id === 'THIRD' || m.id === 'third' || m.roundName === 'THIRD');
+                if (thirdIndex !== -1) {
+                    thirdMatch = penyisihanLeft[thirdIndex];
+                    penyisihanLeft.splice(thirdIndex, 1);
+                }
+            }
+            
+            if (penyisihanRight && penyisihanRight.length > 0) {
+                const thirdIndex = penyisihanRight.findIndex(m => m.id === 'THIRD' || m.id === 'third' || m.roundName === 'THIRD');
+                if (thirdIndex !== -1) {
+                    thirdMatch = penyisihanRight[thirdIndex];
+                    penyisihanRight.splice(thirdIndex, 1);
+                }
+            }
+            
+            // Cari dan pindahkan FINAL dari array jika ada
+            if (penyisihanLeft && penyisihanLeft.length > 0) {
+                const finalIndex = penyisihanLeft.findIndex(m => m.id === 'FINAL' || m.id === 'final');
+                if (finalIndex !== -1) {
+                    finalMatch = penyisihanLeft[finalIndex];
+                    penyisihanLeft.splice(finalIndex, 1);
+                }
+            }
+            
+            if (penyisihanRight && penyisihanRight.length > 0) {
+                const finalIndex = penyisihanRight.findIndex(m => m.id === 'FINAL' || m.id === 'final');
+                if (finalIndex !== -1) {
+                    finalMatch = penyisihanRight[finalIndex];
+                    penyisihanRight.splice(finalIndex, 1);
+                }
+            }
+            
+            mainBracket = {
+                left: {
+                    penyisihan: penyisihanLeft || [],
+                    perempat: rawData.left?.perempat || [],
+                    semifinal: rawData.left?.semifinal || []
+                },
+                right: {
+                    penyisihan: penyisihanRight || [],
+                    perempat: rawData.right?.perempat || [],
+                    semifinal: rawData.right?.semifinal || []
+                },
+                final: finalMatch || { 
+                    id: 'FINAL',
+                    team1: null, 
+                    team2: null, 
+                    score1: '-', 
+                    score2: '-', 
+                    winner: null, 
+                    done: false,
+                    date: 'TBA',
+                    time: 'TBA'
+                },
+                thirdPlace: thirdMatch || { 
+                    id: 'THIRD',
+                    team1: null, 
+                    team2: null, 
+                    score1: '-', 
+                    score2: '-', 
+                    winner: null, 
+                    done: false,
+                    date: 'TBA',
+                    time: 'TBA'
+                }
+            };
         } else {
             // Buat struktur default kosong
             mainBracket = {
-                left: { penyisihan: [], perempat: [], semifinal: [] },
-                right: { penyisihan: [], perempat: [], semifinal: [] },
+                left: { 
+                    penyisihan: [], 
+                    perempat: [], 
+                    semifinal: [] 
+                },
+                right: { 
+                    penyisihan: [], 
+                    perempat: [], 
+                    semifinal: [] 
+                },
                 final: { 
                     id: 'FINAL',
                     team1: null, 
@@ -4215,22 +4281,24 @@ async function renderBracket() {
             };
         }
         
-        // Log untuk debugging
-        console.log(`Bracket data for ${currentBracket}:`, mainBracket);
-        console.log('Final data:', mainBracket.final);
-        console.log('Third Place data:', mainBracket.thirdPlace);
+        console.log('Processed mainBracket:', mainBracket);
         
-        // Fungsi render match card yang sudah diperbaiki
-        function renderMatchCard(match) {
+        // Fungsi render match card
+        function renderMatchCard(match, isFinal = false) {
             if (!match) return '<div class="match-card"><div class="team"><span class="team-name">__________</span><span class="team-score">-</span></div><div class="team"><span class="team-name">__________</span><span class="team-score">-</span></div></div>';
             
             const dateDisplay = match.date || 'TBA';
             const timeDisplay = match.time || 'TBA';
+            const finalClass = isFinal ? 'final-match-card' : '';
             
-            // Jika match kosong (team1 dan team2 null)
+            // Handle BYE
+            const team1Display = match.team1 === 'BY' ? 'BYE' : (match.team1 || '__________');
+            const team2Display = match.team2 === 'BY' ? 'BYE' : (match.team2 || '__________');
+            
+            // Jika match kosong
             if (!match.team1 && !match.team2) {
                 return `
-                    <div class="match-card">
+                    <div class="match-card ${finalClass}">
                         <div class="text-xs text-center bg-gray-100 dark:bg-gray-800 py-1 text-gray-500 rounded-t-lg">
                             <i class="fas fa-calendar-alt mr-1"></i>${dateDisplay} | <i class="fas fa-clock mr-1"></i>${timeDisplay}
                         </div>
@@ -4246,17 +4314,21 @@ async function renderBracket() {
                 `;
             }
             
+            // Cek pemenang
+            const isTeam1Winner = match.winner === match.team1;
+            const isTeam2Winner = match.winner === match.team2;
+            
             return `
-                <div class="match-card">
+                <div class="match-card ${finalClass}" onclick="openMatchDetailModal('${match.id}')" style="cursor: pointer;">
                     <div class="text-xs text-center bg-gray-100 dark:bg-gray-800 py-1 text-gray-500 rounded-t-lg">
                         <i class="fas fa-calendar-alt mr-1"></i>${dateDisplay} | <i class="fas fa-clock mr-1"></i>${timeDisplay}
                     </div>
-                    <div class="team ${match.winner === match.team1 ? 'winner' : ''}">
-                        <span class="team-name">${match.team1 || '__________'}</span>
+                    <div class="team ${isTeam1Winner ? 'winner' : ''}">
+                        <span class="team-name">${team1Display}</span>
                         <span class="team-score">${match.score1 || '-'}</span>
                     </div>
-                    <div class="team ${match.winner === match.team2 ? 'winner' : ''}">
-                        <span class="team-name">${match.team2 || '__________'}</span>
+                    <div class="team ${isTeam2Winner ? 'winner' : ''}">
+                        <span class="team-name">${team2Display}</span>
                         <span class="team-score">${match.score2 || '-'}</span>
                     </div>
                     ${match.winner ? `<div class="text-center text-xs text-green-600 py-1">🏆 ${match.winner}</div>` : ''}
@@ -4264,83 +4336,238 @@ async function renderBracket() {
             `;
         }
         
-        const leftRounds = [
-            { title: 'PENYISIHAN', matches: mainBracket.left?.penyisihan || [] },
-            { title: 'PEREMPAT FINAL', matches: mainBracket.left?.perempat || [] },
-            { title: 'SEMI FINAL', matches: mainBracket.left?.semifinal || [] }
-        ];
+        // ============ SISI KIRI ============
+        const leftMatches = mainBracket.left;
         
-        const rightRounds = [
-            { title: 'SEMI FINAL', matches: mainBracket.right?.semifinal || [] },
-            { title: 'PEREMPAT FINAL', matches: mainBracket.right?.perempat || [] },
-            { title: 'PENYISIHAN', matches: mainBracket.right?.penyisihan || [] }
-        ];
+        let leftHtml = `
+            <div class="bracket-side">
+                <div class="round">
+                    <div class="round-title">PENYISIHAN</div>
+                    <div class="matches">
+        `;
         
-        // Render sisi kiri
-        let leftHtml = '<div class="bracket-side">';
-        for (const round of leftRounds) {
-            leftHtml += `<div class="round"><div class="round-title">${round.title}</div>`;
-            if (round.matches && round.matches.length > 0) {
-                round.matches.forEach((match, idx) => {
-                    const spacing = round.title === 'PENYISIHAN' ? 40 : (round.title === 'PEREMPAT FINAL' ? 20 : 15);
-                    leftHtml += `<div class="match" style="margin-bottom: ${idx < round.matches.length - 1 ? spacing : 0}px">`;
-                    leftHtml += renderMatchCard(match);
-                    leftHtml += `</div>`;
-                });
-            } else {
-                leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
-            }
-            leftHtml += `</div>`;
+        // Penyisihan kiri (match-matching)
+        if (leftMatches.penyisihan && leftMatches.penyisihan.length > 0) {
+            leftMatches.penyisihan.forEach((match, idx) => {
+                leftHtml += `<div class="match-item">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
         }
-        leftHtml += `</div>`;
         
-        // Render final dan third place (ambil dari data bracket)
-        const finalMatch = mainBracket.final || { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: 'TBA' };
-        const thirdPlaceMatch = mainBracket.thirdPlace || { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: 'TBA', time: 'TBA' };
+        leftHtml += `
+                    </div>
+                </div>
+                <div class="round-connector">↓</div>
+                <div class="round">
+                    <div class="round-title">PEREMPAT FINAL</div>
+                    <div class="matches">
+        `;
         
-        const middleHtml = `
-            <div class="final-container">
-                <div class="round-title" style="background: #eab308;">🏆 FINAL 🏆</div>
-                <div class="match">${renderMatchCard(finalMatch)}</div>
-                <div class="round-title mt-4" style="background: #6b7280;">🥉 PEREBUTAN JUARA 3 🥉</div>
-                <div class="match">${renderMatchCard(thirdPlaceMatch)}</div>
+        // Perempat final kiri
+        if (leftMatches.perempat && leftMatches.perempat.length > 0) {
+            leftMatches.perempat.forEach((match, idx) => {
+                const marginTop = idx > 0 ? '40px' : '0';
+                leftHtml += `<div class="match-item" style="margin-top: ${marginTop}">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        }
+        
+        leftHtml += `
+                    </div>
+                </div>
+                <div class="round-connector">↓</div>
+                <div class="round">
+                    <div class="round-title">SEMI FINAL</div>
+                    <div class="matches">
+        `;
+        
+        // Semi final kiri
+        if (leftMatches.semifinal && leftMatches.semifinal.length > 0) {
+            leftMatches.semifinal.forEach((match) => {
+                leftHtml += `<div class="match-item">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        }
+        
+        leftHtml += `
+                    </div>
+                </div>
             </div>
         `;
         
-        // Render sisi kanan
-        let rightHtml = '<div class="bracket-side">';
-        for (const round of rightRounds) {
-            rightHtml += `<div class="round"><div class="round-title">${round.title}</div>`;
-            if (round.matches && round.matches.length > 0) {
-                round.matches.forEach((match, idx) => {
-                    const spacing = round.title === 'PENYISIHAN' ? 40 : (round.title === 'PEREMPAT FINAL' ? 20 : 15);
-                    rightHtml += `<div class="match" style="margin-bottom: ${idx < round.matches.length - 1 ? spacing : 0}px">`;
-                    rightHtml += renderMatchCard(match);
-                    rightHtml += `</div>`;
-                });
-            } else {
-                rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
-            }
-            rightHtml += `</div>`;
+        // ============ SISI KANAN ============
+        const rightMatches = mainBracket.right;
+        
+        let rightHtml = `
+            <div class="bracket-side">
+                <div class="round">
+                    <div class="round-title">SEMI FINAL</div>
+                    <div class="matches">
+        `;
+        
+        // Semi final kanan
+        if (rightMatches.semifinal && rightMatches.semifinal.length > 0) {
+            rightMatches.semifinal.forEach((match) => {
+                rightHtml += `<div class="match-item">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
         }
-        rightHtml += `</div>`;
+        
+        rightHtml += `
+                    </div>
+                </div>
+                <div class="round-connector">↑</div>
+                <div class="round">
+                    <div class="round-title">PEREMPAT FINAL</div>
+                    <div class="matches">
+        `;
+        
+        // Perempat final kanan
+        if (rightMatches.perempat && rightMatches.perempat.length > 0) {
+            rightMatches.perempat.forEach((match, idx) => {
+                const marginBottom = idx < rightMatches.perempat.length - 1 ? '40px' : '0';
+                rightHtml += `<div class="match-item" style="margin-bottom: ${marginBottom}">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        }
+        
+        rightHtml += `
+                    </div>
+                </div>
+                <div class="round-connector">↑</div>
+                <div class="round">
+                    <div class="round-title">PENYISIHAN</div>
+                    <div class="matches">
+        `;
+        
+        // Penyisihan kanan
+        if (rightMatches.penyisihan && rightMatches.penyisihan.length > 0) {
+            rightMatches.penyisihan.forEach((match, idx) => {
+                const marginBottom = idx < rightMatches.penyisihan.length - 1 ? '20px' : '0';
+                rightHtml += `<div class="match-item" style="margin-bottom: ${marginBottom}">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        }
+        
+        rightHtml += `
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // ============ BAGIAN TENGAH (FINAL & JUARA 3) ============
+        const finalMatch = mainBracket.final;
+        const thirdMatch = mainBracket.thirdPlace;
+        
+        const middleHtml = `
+            <div class="center-container">
+                <div class="final-container">
+                    <div class="round-title final-title">
+                        <i class="fas fa-trophy"></i> FINAL <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="match final-match">
+                        ${renderMatchCard(finalMatch, true)}
+                    </div>
+                </div>
+                <div class="third-container">
+                    <div class="round-title third-title">
+                        <i class="fas fa-medal"></i> PEREBUTAN JUARA 3
+                    </div>
+                    <div class="match">
+                        ${renderMatchCard(thirdMatch)}
+                    </div>
+                </div>
+            </div>
+        `;
         
         const sportName = SPORTS_LIST.find(s => s.id === currentBracket)?.name || 'BAGAN';
         
         const fullHtml = `
             <div class="mb-4 flex justify-between items-center flex-wrap gap-3">
-                <h2 class="text-2xl font-black text-red-700">${sportName} - DUA SISI</h2>
-                <button onclick="refreshBracket()" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm">
-                    <i class="fas fa-sync-alt mr-1"></i> Refresh
-                </button>
+                <h2 class="text-2xl font-black text-red-700">
+                    <i class="fas ${SPORTS_LIST.find(s => s.id === currentBracket)?.icon || 'fa-futbol'} mr-2"></i>
+                    ${sportName} - BRACKET
+                </h2>
+                <div class="flex gap-2">
+                    <button onclick="refreshBracket()" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition">
+                        <i class="fas fa-sync-alt mr-1"></i> Refresh
+                    </button>
+                </div>
             </div>
-            <div class="bracket-wrapper" style="overflow-x: auto;">
-                <div class="bracket" style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; min-width: max-content;">
+            <div class="bracket-wrapper" style="overflow-x: auto; padding-bottom: 20px;">
+                <div class="bracket" style="display: flex; justify-content: center; align-items: stretch; gap: 30px; min-width: max-content;">
                     ${leftHtml}
                     ${middleHtml}
                     ${rightHtml}
                 </div>
             </div>
+            <style>
+                .center-container {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    gap: 30px;
+                    min-width: 300px;
+                }
+                .final-title {
+                    background: linear-gradient(135deg, #eab308, #ca8a04);
+                    text-align: center;
+                    font-weight: bold;
+                    padding: 8px 12px;
+                    border-radius: 10px;
+                    margin-bottom: 20px;
+                    flex-shrink: 0; /* Judul tidak ikut flex */
+                }
+                 .final-match, .final-container .match-card, .third-container .match-card {
+                width: 100%;
+                min-width: 280px;
+                max-width: 100%;
+                box-sizing: border-box;
+                }
+                .third-title {
+                    background: #6b7280;
+                    text-align: center;
+                    font-weight: bold;
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin-bottom: 12px;
+                }
+              
+                .winner {
+                    background: linear-gradient(90deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+                    border-left: 3px solid #22c55e;
+                }
+                .match-card {
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                .match-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+                .round-connector {
+                    text-align: center;
+                    font-size: 20px;
+                    color: #dc2626;
+                    margin: 10px 0;
+                }
+                .bracket-side {
+                    min-width: 280px;
+                }
+                .matches {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+                .match-item {
+                    width: 100%;
+                }
+            </style>
         `;
         
         const bracketContent = document.getElementById('bracketContent');
@@ -4348,7 +4575,10 @@ async function renderBracket() {
             bracketContent.innerHTML = fullHtml;
             setTimeout(() => {
                 const wrapper = document.querySelector('.bracket-wrapper');
-                if (wrapper) wrapper.scrollLeft = 0;
+                if (wrapper) {
+                    const center = (wrapper.scrollWidth - wrapper.clientWidth) / 2;
+                    wrapper.scrollLeft = center;
+                }
             }, 100);
         }
         
@@ -4359,61 +4589,6 @@ async function renderBracket() {
             bracketContent.innerHTML = '<div class="text-center text-red-500 py-8">Gagal memuat bagan pertandingan</div>';
         }
     }
-}
-
-// Fungsi refresh manual
-async function refreshBracketData() {
-    console.log('🔄 Refreshing bracket data...');
-    await renderBracket();
-    showToast('✅ Data bagan telah di-refresh', 'success');
-}
-
-// Fungsi renderMatchCard
-function renderMatchCard(match) {
-    if (!match) return '<div class="match-card"><div class="team"><span class="team-name">__________</span><span class="team-score">-</span></div><div class="team"><span class="team-name">__________</span><span class="team-score">-</span></div></div>';
-    
-    const dateDisplay = match.date || 'TBA';
-    const timeDisplay = match.time || 'TBA';
-    
-    // Cek apakah match kosong
-    if (!match.team1 && !match.team2) {
-        return `
-            <div class="match-card">
-                <div class="text-xs text-center bg-gray-100 dark:bg-gray-800 py-1 text-gray-500 rounded-t-lg">
-                    <i class="fas fa-calendar-alt mr-1"></i>${dateDisplay} | <i class="fas fa-clock mr-1"></i>${timeDisplay}
-                </div>
-                <div class="team">
-                    <span class="team-name">__________</span>
-                    <span class="team-score">-</span>
-                </div>
-                <div class="team">
-                    <span class="team-name">__________</span>
-                    <span class="team-score">-</span>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Tampilkan skor - perhatikan pengecekan untuk nilai 0
-    const score1Display = (match.score1 !== undefined && match.score1 !== null && match.score1 !== '-') ? match.score1 : '-';
-    const score2Display = (match.score2 !== undefined && match.score2 !== null && match.score2 !== '-') ? match.score2 : '-';
-    
-    return `
-        <div class="match-card">
-            <div class="text-xs text-center bg-gray-100 dark:bg-gray-800 py-1 text-gray-500 rounded-t-lg">
-                <i class="fas fa-calendar-alt mr-1"></i>${dateDisplay} | <i class="fas fa-clock mr-1"></i>${timeDisplay}
-            </div>
-            <div class="team ${match.winner === match.team1 ? 'winner' : ''}">
-                <span class="team-name">${match.team1 || '__________'}</span>
-                <span class="team-score">${score1Display}</span>
-            </div>
-            <div class="team ${match.winner === match.team2 ? 'winner' : ''}">
-                <span class="team-name">${match.team2 || '__________'}</span>
-                <span class="team-score">${score2Display}</span>
-            </div>
-            ${match.winner ? `<div class="text-center text-xs text-green-600 py-1">🏆 ${match.winner}</div>` : ''}
-        </div>
-    `;
 }
 
 // ======================== INITIALIZE ========================

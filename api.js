@@ -6,11 +6,6 @@ const DEFAULT_ADMINS = [{ username: 'admin', password: 'admin123' }];
 const CABOR = ['Futsal', 'Basket', 'Catur', 'Voli', 'Badminton', 'Esport', 'Tenis Meja'];
 const RT_LIST = ['RT 01', 'RT 02', 'RT 03', 'RT 04', 'RT 05', 'RT 06', 'RT 07', 'RT 08', 'RT 09', 'RT 10', 'RT 11', 'RT 12', 'RT 13', 'RT 14', 'BY'];
 
-const DEFAULT_PARTICIPANTS = [
-    { id: '1', name: 'Ahmad Fauzi', rt: 'RT 01', sport: 'Futsal', noHp: '081234567890', status: 'Aktif' },
-    { id: '2', name: 'Budi Santoso', rt: 'RT 02', sport: 'Basket', noHp: '081234567891', status: 'Aktif' },
-    { id: '3', name: 'Citra Dewi', rt: 'RT 03', sport: 'Badminton', noHp: '081234567892', status: 'Aktif' },
-];
 
 const DEFAULT_ANNOUNCEMENTS = [
     { id: 'a1', judul: 'Pembukaan Lomba', isi: 'Acara pembukaan 10 Agustus 2025', penting: true, date: new Date().toISOString() },
@@ -127,9 +122,6 @@ function initLocalData() {
     if (!localStorage.getItem('app_admins')) {
         localStorage.setItem('app_admins', JSON.stringify(DEFAULT_ADMINS));
     }
-    if (!localStorage.getItem('app_participants')) {
-        localStorage.setItem('app_participants', JSON.stringify(DEFAULT_PARTICIPANTS));
-    }
     if (!localStorage.getItem('app_announcements')) {
         localStorage.setItem('app_announcements', JSON.stringify(DEFAULT_ANNOUNCEMENTS));
     }
@@ -223,7 +215,7 @@ async function getMatches() {
                 let skorB = null;
                 
                 // Cek score1 - nilai 0 harus tetap diproses
-                if (row.score1 !== undefined && row.score1 !== null && row.score1 !== '-') {
+                if (row.score1 !== undefined && row.score1 !== null && row.score1 !== '0') {
                     // Jangan gunakan && row.score1 karena 0 akan dianggap falsy
                     const parsed = parseInt(row.score1);
                     if (!isNaN(parsed)) {
@@ -232,7 +224,7 @@ async function getMatches() {
                 }
                 
                 // Cek score2
-                if (row.score2 !== undefined && row.score2 !== null && row.score2 !== '-') {
+                if (row.score2 !== undefined && row.score2 !== null && row.score2 !== '0') {
                     const parsed = parseInt(row.score2);
                     if (!isNaN(parsed)) {
                         skorB = parsed;
@@ -261,13 +253,10 @@ async function getMatches() {
                 };
             });
             
-            // Filter hanya match yang valid
-            const validMatches = matches.filter(m => m.timA && m.timB && m.timA !== 'BY' && m.timB !== 'BY');
-            console.log(`✅ Valid matches: ${validMatches.length}`);
-            
+        
             // Simpan ke cache
-            localStorage.setItem('app_matches', JSON.stringify(validMatches));
-            return validMatches;
+            localStorage.setItem('app_matches', JSON.stringify(spreadsheetData));
+            return spreadsheetData;
         }
         
         // Fallback ke localStorage
@@ -416,23 +405,19 @@ async function getBracketData() {
             else return;
             
             // Tentukan sisi
-            let side = 'left';
-            if (match.id && match.id.startsWith('L')) {
-                side = 'left';
-            } else if (match.id && match.id.startsWith('R')) {
-                side = 'right';
-            } else {
-                const teamANum = parseInt(match.timA?.replace(/\D/g, '')) || 0;
-                if (teamANum >= 1 && teamANum <= 7) side = 'left';
-                else if (teamANum >= 8 && teamANum <= 14) side = 'right';
-                else side = 'left';
-            }
+            // Tentukan sisi - pastikan ini benar
+                let side = 'left';
+                if (match.id && match.id.startsWith('R')) {
+    side = 'right';
+} else if (match.id && match.id.startsWith('L')) {
+    side = 'left';
+} else {
+    // fallback berdasarkan nomor RT
+    const teamNum = parseInt(match.timA?.replace(/\D/g, '')) || 0;
+    side = teamNum <= 7 ? 'left' : 'right';
+}
             
-            // Skip match yang mengandung BY
-            if (match.timA === 'BY' || match.timB === 'BY') {
-                console.log(`⏭️ Skip match ${match.id}: contains BY`);
-                return;
-            }
+            
             
             brackets[sportId][side][roundKey].push({
                 id: match.id,
