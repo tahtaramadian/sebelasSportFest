@@ -6,63 +6,16 @@ const DEFAULT_ADMINS = [{ username: 'admin', password: 'admin123' }];
 const CABOR = ['Futsal', 'Basket', 'Catur', 'Voli', 'Badminton', 'Esport', 'Tenis Meja'];
 const RT_LIST = ['RT 01', 'RT 02', 'RT 03', 'RT 04', 'RT 05', 'RT 06', 'RT 07', 'RT 08', 'RT 09', 'RT 10', 'RT 11', 'RT 12', 'RT 13', 'RT 14', 'BY'];
 
+const DEFAULT_PARTICIPANTS = [
+    { id: '1', name: 'Ahmad Fauzi', rt: 'RT 01', sport: 'Futsal', noHp: '081234567890', status: 'Aktif' },
+    { id: '2', name: 'Budi Santoso', rt: 'RT 02', sport: 'Basket', noHp: '081234567891', status: 'Aktif' },
+    { id: '3', name: 'Citra Dewi', rt: 'RT 03', sport: 'Badminton', noHp: '081234567892', status: 'Aktif' },
+];
 
 const DEFAULT_ANNOUNCEMENTS = [
     { id: 'a1', judul: 'Pembukaan Lomba', isi: 'Acara pembukaan 10 Agustus 2025', penting: true, date: new Date().toISOString() },
 ];
-// ==================== FUNGSI CALL API LANGSUNG ====================
-async function callAPI(action, sheet, data = null) {
-    const url = `${API_BASE_URL}?action=${action}&sheet=${sheet}&t=${Date.now()}`;
-    
-    const options = {
-        method: data ? 'POST' : 'GET',
-        mode: 'no-cors',  // Ganti dari 'cors' ke 'no-cors'
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    };
-    
-    if (data) {
-        options.body = JSON.stringify(data);
-        console.log(`📤 POST to ${sheet}:`, data.length, 'records');
-    } else {
-        console.log(`📥 GET from ${sheet}`);
-    }
-    
-    try {
-        const response = await fetch(url, options);
-        
-        // Karena mode 'no-cors', response tidak bisa dibaca
-        // Tapi request tetap terkirim
-        console.log(`✅ ${action} request sent to ${sheet}`);
-        
-        // Untuk GET, kita perlu data dari cache
-        if (action === 'get') {
-            // Coba ambil dari localStorage dulu
-            const cacheKey = `app_${sheet}`.toLowerCase();
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                console.log(`📦 Using cached ${sheet} data`);
-                return JSON.parse(cached);
-            }
-        }
-        
-        return [];
-        
-    } catch (error) {
-        console.error(`❌ ${action} error:`, error);
-        
-        // Fallback ke cache
-        if (action === 'get') {
-            const cacheKey = `app_${sheet}`.toLowerCase();
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                return JSON.parse(cached);
-            }
-        }
-        return [];
-    }
-}
+
 // ==================== AMBIL DATA DARI SPREADSHEET ====================
 async function fetchFromSpreadsheet(sheetName) {
     try {
@@ -85,35 +38,18 @@ async function fetchFromSpreadsheet(sheetName) {
 
 async function saveToSpreadsheet(sheetName, data) {
     try {
-        const url = `${API_BASE_URL}?action=save&sheet=${sheetName}&t=${Date.now()}`;
-        
-        // Gunakan mode no-cors untuk menghindari CORS error
+        const url = `${API_BASE_URL}?action=save&sheet=${sheetName}`;
         const response = await fetch(url, {
             method: 'POST',
-            mode: 'no-cors',  // Kunci utama
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        
-        // Karena mode no-cors, response tidak bisa dibaca
-        // Tapi request tetap terkirim
-        console.log(`💾 Save request sent to ${sheetName}`);
-        
-        // Simpan juga ke localStorage sebagai backup
-        const cacheKey = `app_${sheetName}`.toLowerCase();
-        localStorage.setItem(cacheKey, JSON.stringify(data));
-        
-        return { success: true, message: 'Request sent' };
-        
+        const result = await response.json();
+        console.log(`💾 Saved to ${sheetName}:`, result);
+        return result;
     } catch (error) {
         console.error(`Error saving to ${sheetName}:`, error);
-        
-        // Fallback: simpan ke localStorage saja
-        const cacheKey = `app_${sheetName}`.toLowerCase();
-        localStorage.setItem(cacheKey, JSON.stringify(data));
-        console.log(`💾 Saved to localStorage as fallback: ${cacheKey}`);
-        
-        return { success: true, localBackup: true };
+        return { success: false };
     }
 }
 
@@ -121,6 +57,9 @@ async function saveToSpreadsheet(sheetName, data) {
 function initLocalData() {
     if (!localStorage.getItem('app_admins')) {
         localStorage.setItem('app_admins', JSON.stringify(DEFAULT_ADMINS));
+    }
+    if (!localStorage.getItem('app_participants')) {
+        localStorage.setItem('app_participants', JSON.stringify(DEFAULT_PARTICIPANTS));
     }
     if (!localStorage.getItem('app_announcements')) {
         localStorage.setItem('app_announcements', JSON.stringify(DEFAULT_ANNOUNCEMENTS));
@@ -205,63 +144,35 @@ async function saveSettings(settings) {
 // ==================== BRACKET / MATCH ====================
 async function getMatches() {
     try {
-        const spreadsheetData = await callAPI('get', 'Bracket');
-        console.log('📊 Raw spreadsheet data:', spreadsheetData);
+        const spreadsheetData = await fetchFromSpreadsheet('Bracket');
         
         if (spreadsheetData && spreadsheetData.length > 0) {
-            const matches = spreadsheetData.map(row => {
-                // Parse skor - perhatikan nilai 0
-                let skorA = null;
-                let skorB = null;
-                
-                // Cek score1 - nilai 0 harus tetap diproses
-                if (row.score1 !== undefined && row.score1 !== null && row.score1 !== '0') {
-                    // Jangan gunakan && row.score1 karena 0 akan dianggap falsy
-                    const parsed = parseInt(row.score1);
-                    if (!isNaN(parsed)) {
-                        skorA = parsed;
-                    }
-                }
-                
-                // Cek score2
-                if (row.score2 !== undefined && row.score2 !== null && row.score2 !== '0') {
-                    const parsed = parseInt(row.score2);
-                    if (!isNaN(parsed)) {
-                        skorB = parsed;
-                    }
-                }
-                
-                console.log(`Match ${row.team1} vs ${row.team2}: raw scores = ${row.score1}|${row.score2} -> parsed = ${skorA}|${skorB}`);
-                
-                // Parse status done
-                let isDone = false;
-                if (row.done === true || row.done === 'TRUE' || row.done === 'true' || row.done === 1) {
-                    isDone = true;
-                }
-                
-                return {
-                    id: row.matchId || row.id,
-                    cabor: sportIdToName(row.sportId),
-                    timA: row.team1,
-                    timB: row.team2,
-                    skorA: skorA,
-                    skorB: skorB,
-                    status: isDone ? 'Selesai' : 'Terjadwal',
-                    round: row.round,
-                    tanggal: row.date || 'TBA',
-                    waktu: row.time || '19:00'
-                };
-            });
+            const matches = spreadsheetData.map(row => ({
+                id: row.matchId,
+                cabor: sportIdToName(row.sportId),
+                timA: row.team1,
+                timB: row.team2,
+                skorA: row.score1 && row.score1 !== '-' && row.score1 !== '' ? parseInt(row.score1) : null,
+                skorB: row.score2 && row.score2 !== '-' && row.score2 !== '' ? parseInt(row.score2) : null,
+                status: (row.done === true || row.done === 'TRUE' || row.done === 'true') ? 'Selesai' : 'Terjadwal',
+                round: row.round,
+                tanggal: formatDateFromSpreadsheet(row.date),
+                waktu: formatTimeFromSpreadsheet(row.time)
+            }));
             
-        
-            // Simpan ke cache
-            localStorage.setItem('app_matches', JSON.stringify(spreadsheetData));
-            return spreadsheetData;
+            // Filter hanya match yang valid (team1 dan team2 ada)
+            const validMatches = matches.filter(m => m.timA && m.timB);
+            localStorage.setItem('app_matches', JSON.stringify(validMatches));
+            return validMatches;
         }
         
         // Fallback ke localStorage
         const data = localStorage.getItem('app_matches');
-        return data ? JSON.parse(data) : [];
+        if (data) {
+            return JSON.parse(data);
+        }
+        
+        return [];
         
     } catch (error) {
         console.error('Error getMatches:', error);
@@ -269,29 +180,8 @@ async function getMatches() {
     }
 }
 
-// Helper function
-function sportIdToName(sportId) {
-    const map = {
-        'futsal': 'Futsal',
-        'basket': 'Basket',
-        'voli': 'Voli',
-        'badminton': 'Badminton',
-        'catur': 'Catur',
-        'esport': 'Esport',
-        'tenismeja': 'Tenis Meja'
-    };
-    return map[sportId] || sportId;
-}
-
 async function saveMatches(matches) {
-    console.log('💾 Saving matches...');
-    
-    // Simpan ke localStorage dulu
     localStorage.setItem('app_matches', JSON.stringify(matches));
-    
-    // Update app_bracket juga
-    const brackets = await getBracketData();
-    localStorage.setItem('app_bracket', JSON.stringify(brackets));
     
     // Konversi ke format spreadsheet
     const bracketRows = matches.map(m => ({
@@ -302,19 +192,14 @@ async function saveMatches(matches) {
         team2: m.timB,
         score1: m.skorA !== null ? String(m.skorA) : '',
         score2: m.skorB !== null ? String(m.skorB) : '',
-        winner: (m.skorA !== null && m.skorB !== null && m.skorA > m.skorB) ? m.timA : 
-                (m.skorA !== null && m.skorB !== null && m.skorB > m.skorA) ? m.timB : '',
+        winner: (m.skorA && m.skorB && m.skorA > m.skorB) ? m.timA : 
+                (m.skorA && m.skorB && m.skorB > m.skorA) ? m.timB : '',
         done: m.status === 'Selesai',
         date: m.tanggal,
         time: m.waktu
     }));
     
-    // Kirim ke spreadsheet (dengan no-cors)
     await saveToSpreadsheet('Bracket', bracketRows);
-    
-    // Trigger event untuk refresh
-    window.dispatchEvent(new Event('storage'));
-    
     return { success: true };
 }
 
@@ -363,91 +248,61 @@ async function getBracketData() {
                 };
             }
             
-            // ========== HANDLER UNTUK FINAL ==========
-            if (match.round === 'Final' || match.round === 'final') {
-                brackets[sportId].final = {
-                    id: match.id,
-                    team1: match.timA,
-                    team2: match.timB,
-                    score1: match.skorA !== null ? String(match.skorA) : '-',
-                    score2: match.skorB !== null ? String(match.skorB) : '-',
-                    winner: (match.skorA !== null && match.skorB !== null && match.skorA > match.skorB) ? match.timA :
-                            (match.skorA !== null && match.skorB !== null && match.skorB > match.skorA) ? match.timB : null,
-                    done: (match.skorA !== null && match.skorB !== null),
-                    date: match.tanggal || 'TBA',
-                    time: match.waktu || '19:00'
-                };
-                return;
-            }
-            
-            // ========== HANDLER UNTUK PEREBUTAN JUARA 3 ==========
-            if (match.round === 'Perebutan Juara 3' || match.round === 'thirdPlace' || match.round === 'Third Place') {
-                brackets[sportId].thirdPlace = {
-                    id: match.id,
-                    team1: match.timA,
-                    team2: match.timB,
-                    score1: match.skorA !== null ? String(match.skorA) : '-',
-                    score2: match.skorB !== null ? String(match.skorB) : '-',
-                    winner: (match.skorA !== null && match.skorB !== null && match.skorA > match.skorB) ? match.timA :
-                            (match.skorA !== null && match.skorB !== null && match.skorB > match.skorA) ? match.timB : null,
-                    done: (match.skorA !== null && match.skorB !== null),
-                    date: match.tanggal || 'TBA',
-                    time: match.waktu || '19:00'
-                };
-                return;
-            }
-            
-            // ========== HANDLER UNTUK PENYISIHAN, PEREMPAT, SEMI ==========
             let roundKey = 'penyisihan';
             if (match.round === 'Penyisihan') roundKey = 'penyisihan';
             else if (match.round === 'Perempat Final') roundKey = 'perempat';
             else if (match.round === 'Semi Final') roundKey = 'semifinal';
-            else return;
             
             // Tentukan sisi
-            // Tentukan sisi - pastikan ini benar
-                let side = 'left';
-                if (match.id && match.id.startsWith('R')) {
-    side = 'right';
-} else if (match.id && match.id.startsWith('L')) {
-    side = 'left';
-} else {
-    // fallback berdasarkan nomor RT
-    const teamNum = parseInt(match.timA?.replace(/\D/g, '')) || 0;
-    side = teamNum <= 7 ? 'left' : 'right';
-}
+            let side = 'left';
+            if (match.id && match.id.startsWith('L')) {
+                side = 'left';
+            } else if (match.id && match.id.startsWith('R')) {
+                side = 'right';
+            } else {
+                const teamANum = parseInt(match.timA?.replace(/\D/g, '')) || 0;
+                if (teamANum >= 1 && teamANum <= 7) side = 'left';
+                else if (teamANum >= 8 && teamANum <= 14) side = 'right';
+                else side = brackets[sportId].left[roundKey].length <= brackets[sportId].right[roundKey].length ? 'left' : 'right';
+            }
             
+            // Skor
+            let score1 = '-', score2 = '-';
+            let winner = null;
+            let done = false;
             
+            if (match.skorA !== null && match.skorA !== undefined) {
+                score1 = String(match.skorA);
+                score2 = String(match.skorB);
+                done = true;
+                if (parseInt(match.skorA) > parseInt(match.skorB)) {
+                    winner = match.timA;
+                } else if (parseInt(match.skorB) > parseInt(match.skorA)) {
+                    winner = match.timB;
+                }
+            }
+            
+            // Tanggal sudah dalam format DD/MM/YYYY dari getMatches
+            const matchDate = match.tanggal || 'TBA';
+            const matchTime = match.waktu || '19:00';
             
             brackets[sportId][side][roundKey].push({
                 id: match.id,
                 team1: match.timA,
                 team2: match.timB,
-                score1: match.skorA !== null ? String(match.skorA) : '-',
-                score2: match.skorB !== null ? String(match.skorB) : '-',
-                winner: (match.skorA !== null && match.skorB !== null && match.skorA > match.skorB) ? match.timA :
-                        (match.skorA !== null && match.skorB !== null && match.skorB > match.skorA) ? match.timB : null,
-                done: (match.skorA !== null && match.skorB !== null),
-                date: match.tanggal || 'TBA',
-                time: match.waktu || '19:00'
+                score1: score1,
+                score2: score2,
+                winner: winner,
+                done: done,
+                date: matchDate,
+                time: matchTime
             });
         });
-        
-        console.log('✅ Processed brackets:', brackets);
-        
-        // Simpan ke localStorage untuk backup
-        localStorage.setItem('app_bracket', JSON.stringify(brackets));
         
         return brackets;
         
     } catch (error) {
         console.error('Error getBracketData:', error);
-        // Ambil dari cache jika error
-        const cached = localStorage.getItem('app_bracket');
-        if (cached) {
-            console.log('📦 Using cached bracket data');
-            return JSON.parse(cached);
-        }
         return {};
     }
 }
@@ -458,7 +313,18 @@ async function saveBracketData(brackets) {
 }
 
 // ==================== HELPER FUNCTIONS ====================
-
+function sportIdToName(sportId) {
+    const map = {
+        'futsal': 'Futsal',
+        'basket': 'Basket',
+        'voli': 'Voli',
+        'badminton': 'Badminton',
+        'catur': 'Catur',
+        'esport': 'Esport',
+        'tenismeja': 'Tenis Meja'
+    };
+    return map[sportId?.toLowerCase()] || sportId;
+}
 
 function nameToSportId(name) {
     const map = {
