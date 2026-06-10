@@ -16,6 +16,46 @@ const DEFAULT_ANNOUNCEMENTS = [
     { id: 'a1', judul: 'Pembukaan Lomba', isi: 'Acara pembukaan 10 Agustus 2025', penting: true, date: new Date().toISOString() },
 ];
 
+// ==================== FUNGSI CALL API ====================
+async function callAPI(action, sheet, data = null) {
+    const url = `${API_BASE_URL}?action=${action}&sheet=${sheet}&t=${Date.now()}`;
+    
+    const options = {
+        method: data ? 'POST' : 'GET',
+        mode: 'no-cors',  // Gunakan no-cors untuk localhost
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    };
+    
+    if (data) {
+        options.body = JSON.stringify(data);
+    }
+    
+    try {
+        await fetch(url, options);
+        console.log(`${action} request sent to ${sheet}`);
+        
+        // Untuk GET, ambil dari cache
+        if (action === 'get') {
+            const cacheKey = `app_${sheet}`.toLowerCase();
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                return JSON.parse(cached);
+            }
+        }
+        return [];
+        
+    } catch (error) {
+        console.error(`API Error:`, error);
+        const cacheKey = `app_${sheet}`.toLowerCase();
+        const cached = localStorage.getItem(cacheKey);
+        return cached ? JSON.parse(cached) : [];
+    }
+}
+
+
+
 // ==================== AMBIL DATA DARI SPREADSHEET ====================
 async function fetchFromSpreadsheet(sheetName) {
     try {
@@ -222,6 +262,7 @@ async function updateMatchScore(matchId, skorA, skorB) {
 async function getBracketData() {
     try {
         const matches = await getMatches();
+        console.log('Match nya', matches);
         console.log('📦 Matches for bracket:', matches);
         
         const brackets = {};
@@ -248,10 +289,74 @@ async function getBracketData() {
                 };
             }
             
+            // ========== HANDLER UNTUK FINAL ==========
+            if (match.round === 'Final' || match.round === 'final' || match.round === 'FINAL') {
+                let score1 = '-', score2 = '-';
+                let winner = null;
+                let done = false;
+                
+                if (match.skorA !== null && match.skorA !== undefined) {
+                    score1 = String(match.skorA);
+                    score2 = String(match.skorB);
+                    done = true;
+                    if (parseInt(match.skorA) > parseInt(match.skorB)) {
+                        winner = match.timA;
+                    } else if (parseInt(match.skorB) > parseInt(match.skorA)) {
+                        winner = match.timB;
+                    }
+                }
+                
+                brackets[sportId].final = {
+                    id: match.id,
+                    team1: match.timA,
+                    team2: match.timB,
+                    score1: score1,
+                    score2: score2,
+                    winner: winner,
+                    done: done,
+                    date: match.tanggal || 'TBA',
+                    time: match.waktu || '19:00'
+                };
+                return; // Langsung return, tidak perlu proses lebih lanjut
+            }
+            
+            // ========== HANDLER UNTUK PEREBUTAN JUARA 3 ==========
+            if (match.round === 'Perebutan Juara 3' || match.round === 'thirdPlace' || match.round === 'Third Place' || match.round === 'Juara 3') {
+                let score1 = '-', score2 = '-';
+                let winner = null;
+                let done = false;
+                
+                if (match.skorA !== null && match.skorA !== undefined) {
+                    score1 = String(match.skorA);
+                    score2 = String(match.skorB);
+                    done = true;
+                    if (parseInt(match.skorA) > parseInt(match.skorB)) {
+                        winner = match.timA;
+                    } else if (parseInt(match.skorB) > parseInt(match.skorA)) {
+                        winner = match.timB;
+                    }
+                }
+                
+                brackets[sportId].thirdPlace = {
+                    id: match.id,
+                    team1: match.timA,
+                    team2: match.timB,
+                    score1: score1,
+                    score2: score2,
+                    winner: winner,
+                    done: done,
+                    date: match.tanggal || 'TBA',
+                    time: match.waktu || '19:00'
+                };
+                return; // Langsung return, tidak perlu proses lebih lanjut
+            }
+            
+            // ========== KODE EXISTING UNTUK PENYISIHAN, PEREMPAT, SEMI ==========
             let roundKey = 'penyisihan';
             if (match.round === 'Penyisihan') roundKey = 'penyisihan';
             else if (match.round === 'Perempat Final') roundKey = 'perempat';
             else if (match.round === 'Semi Final') roundKey = 'semifinal';
+            else return; // Jika bukan round yang dikenal, skip
             
             // Tentukan sisi
             let side = 'left';
@@ -282,7 +387,6 @@ async function getBracketData() {
                 }
             }
             
-            // Tanggal sudah dalam format DD/MM/YYYY dari getMatches
             const matchDate = match.tanggal || 'TBA';
             const matchTime = match.waktu || '19:00';
             
@@ -299,6 +403,7 @@ async function getBracketData() {
             });
         });
         
+        console.log('✅ Processed brackets:', brackets);
         return brackets;
         
     } catch (error) {
@@ -306,6 +411,7 @@ async function getBracketData() {
         return {};
     }
 }
+
 
 async function saveBracketData(brackets) {
     localStorage.setItem('app_bracket', JSON.stringify(brackets));
@@ -395,6 +501,96 @@ function formatTimeFromSpreadsheet(timeValue) {
     return '19:00';
 }
 
+// ==================== GALLERY ====================
+// ==================== GALLERY ====================
+async function getGallery() {
+    try {
+        // Coba ambil dari localStorage dulu
+        const cached = localStorage.getItem('app_gallery');
+        if (cached) {
+            console.log('📸 Using cached gallery');
+            return JSON.parse(cached);
+        }
+        
+        // Jika tidak ada, coba dari API
+        const data = await callAPI('get', 'Gallery');
+        
+        if (Array.isArray(data) && data.length > 0) {
+            const gallery = data.map(row => ({
+                id: row.id,
+                title: row.title || 'Foto Dokumentasi',
+                category: row.category || 'dokumentasi',
+                imageUrl: row.image_url || row.imageUrl,
+                thumbnailUrl: row.thumbnail_url || row.image_url,
+                date: row.date || new Date().toISOString()
+            }));
+            
+            localStorage.setItem('app_gallery', JSON.stringify(gallery));
+            return gallery;
+        }
+        
+        return [];
+        
+    } catch (error) {
+        console.error('Error getGallery:', error);
+        const cached = localStorage.getItem('app_gallery');
+        return cached ? JSON.parse(cached) : [];
+    }
+}
+
+async function saveGallery(gallery) {
+    // Simpan ke localStorage
+    localStorage.setItem('app_gallery', JSON.stringify(gallery));
+    console.log('💾 Gallery saved to localStorage:', gallery.length);
+    
+    // Coba simpan ke spreadsheet (optional)
+    try {
+        const toSave = gallery.map(item => ({
+            id: item.id,
+            title: item.title,
+            category: item.category,
+            image_url: item.imageUrl,
+            date: item.date
+        }));
+        
+        await callAPI('save', 'Gallery', toSave);
+        console.log('💾 Gallery saved to spreadsheet');
+    } catch (error) {
+        console.warn('Cannot save to spreadsheet:', error);
+    }
+}
+
+async function addGalleryItem(item) {
+    const gallery = await getGallery();
+    item.id = item.id || Date.now().toString();
+    item.date = item.date || new Date().toISOString();
+    gallery.push(item);
+    await saveGallery(gallery);
+    return item;
+}
+
+async function updateGalleryItem(id, updates) {
+    const gallery = await getGallery();
+    const index = gallery.findIndex(item => item.id === id);
+    if (index !== -1) {
+        gallery[index] = { ...gallery[index], ...updates };
+        await saveGallery(gallery);
+        return true;
+    }
+    return false;
+}
+
+async function deleteGalleryItem(id) {
+    const gallery = await getGallery();
+    const filtered = gallery.filter(item => item.id != id);
+    await saveGallery(filtered);
+    return true;
+}
+
+
+// Export ke window
+
+
 // ==================== TEST ====================
 async function testAPI() {
     console.log('🧪 Testing API Connection...');
@@ -425,6 +621,11 @@ window.saveMatches = saveMatches;
 window.updateMatchScore = updateMatchScore;
 window.getBracketData = getBracketData;
 window.saveBracketData = saveBracketData;
+window.getGallery = getGallery;
+window.saveGallery = saveGallery;
+window.addGalleryItem = addGalleryItem;
+window.deleteGalleryItem = deleteGalleryItem;
 window.testAPI = testAPI;
 
 console.log('✅ API.js loaded with Google Spreadsheet integration');
+

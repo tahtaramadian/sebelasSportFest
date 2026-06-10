@@ -961,7 +961,7 @@ const SPORTS = [{
         teams: 15,
         desc: 'Permainan Futsal dengan 5 pemain per tim',
         schedule: {
-            penyisihan: '07 Juni 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
             third:'',
@@ -981,7 +981,7 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan bola basket antar RT',
          schedule: {
-            penyisihan: '14 Juni 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
             third:'',
@@ -1002,7 +1002,7 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan bola voli 6 pemain',
        schedule: {
-            penyisihan: '28 Juni 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
             third:'',
@@ -1022,7 +1022,7 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan bulu tangkis tunggal & ganda',
         schedule: {
-            penyisihan: '07 Juli 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
             third:'',
@@ -1042,7 +1042,7 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan catur individu',
        schedule: {
-            penyisihan: '14 Juli 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
             third:'',
@@ -1062,7 +1062,7 @@ const SPORTS = [{
         teams: 15,
         desc: 'Turnamen Mobile Legends antar RT',
        schedule: {
-            penyisihan: '28 Juli 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
             third:'',
@@ -1082,7 +1082,7 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan tenis meja individu',
        schedule: {
-            penyisihan: '28 Juli 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
             third:'',
@@ -1771,11 +1771,137 @@ function renderSports() {
     const brackets = await getBracketData();
     const sportBracket = brackets[id] || null;
     
+    console.log('📊 Sport Bracket Data:', sportBracket);
+    
     document.getElementById('sportsGrid').classList.add('hidden');
     const detail = document.getElementById('sportDetail');
     detail.classList.remove('hidden');
     
-    // Fungsi untuk mengurutkan match berdasarkan tanggal
+    // ========== DEFINISIKAN VARIABEL TANGGAL DI AWAL ==========
+    let penyisihanDate = 'TBA';
+    let perempatDate = 'TBA';
+    let semiDate = 'TBA';
+    let finalDate = 'TBA';
+    let thirdDate = 'TBA';
+    
+    // ========== AMBIL TANGGAL DARI BRACKET ==========
+    // Fungsi helper untuk mencari tanggal dari array match
+     const getFirstValidDate = (matchesArray) => {
+    if (!matchesArray || !Array.isArray(matchesArray) || matchesArray.length === 0) return 'TBA';
+    // Cari match yang bukan BY dan memiliki date
+    const matchWithDate = matchesArray.find(m => 
+        m.date && 
+        m.date !== 'TBA' && 
+        m.date !== '' &&
+        m.team1 !== 'BY' && 
+        m.team2 !== 'BY'
+    );
+    return matchWithDate ? matchWithDate.date : 'TBA';
+};
+
+    
+    // Ambil tanggal penyisihan (coba dari left dulu, lalu right)
+    let penyisihanLeft = getFirstValidDate(sportBracket?.left?.penyisihan);
+    let penyisihanRight = getFirstValidDate(sportBracket?.right?.penyisihan);
+    penyisihanDate = penyisihanLeft !== 'TBA' ? penyisihanLeft : penyisihanRight;
+    
+    // Ambil tanggal perempat final
+    let perempatLeft = getFirstValidDate(sportBracket?.left?.perempat);
+    let perempatRight = getFirstValidDate(sportBracket?.right?.perempat);
+    perempatDate = perempatLeft !== 'TBA' ? perempatLeft : perempatRight;
+    
+    // Ambil tanggal semi final
+    let semiLeft = getFirstValidDate(sportBracket?.left?.semifinal);
+    let semiRight = getFirstValidDate(sportBracket?.right?.semifinal);
+    semiDate = semiLeft !== 'TBA' ? semiLeft : semiRight;
+    
+    // Ambil tanggal final dan third place
+    if (sportBracket?.final?.date && sportBracket.final.date !== 'TBA') {
+        finalDate = sportBracket.final.date;
+    }
+    if (sportBracket?.thirdPlace?.date && sportBracket.thirdPlace.date !== 'TBA') {
+        thirdDate = sportBracket.thirdPlace.date;
+    }
+    
+    console.log('📅 Dates:', { penyisihanDate, perempatDate, semiDate, finalDate, thirdDate });
+    
+    // ========== FUNGSI UNTUK MENGUMPULKAN SEMUA MATCH ==========
+    const allMatches = [];
+    
+    // 1. Penyisihan (Left + Right)
+    if (sportBracket?.left?.penyisihan) {
+        sportBracket.left.penyisihan.forEach(m => {
+            if (m.team1 && m.team2 && m.team1 !== 'BY' && m.team2 !== 'BY') {
+                allMatches.push({ ...m, round: 'Penyisihan' });
+            }
+        });
+    }
+    if (sportBracket?.right?.penyisihan) {
+        sportBracket.right.penyisihan.forEach(m => {
+            if (m.team1 && m.team2 && m.team1 !== 'BY' && m.team2 !== 'BY') {
+                allMatches.push({ ...m, round: 'Penyisihan' });
+            }
+        });
+    }
+    
+    // 2. Perempat Final (Left + Right)
+    if (sportBracket?.left?.perempat) {
+        sportBracket.left.perempat.forEach(m => {
+            if (m.team1 && m.team2) {
+                allMatches.push({ ...m, round: 'Perempat Final' });
+            }
+        });
+    }
+    if (sportBracket?.right?.perempat) {
+        sportBracket.right.perempat.forEach(m => {
+            if (m.team1 && m.team2) {
+                allMatches.push({ ...m, round: 'Perempat Final' });
+            }
+        });
+    }
+    
+    // 3. Semi Final (Left + Right)
+    if (sportBracket?.left?.semifinal) {
+        sportBracket.left.semifinal.forEach(m => {
+            if (m.team1 && m.team2) {
+                allMatches.push({ ...m, round: 'Semi Final' });
+            }
+        });
+    }
+    if (sportBracket?.right?.semifinal) {
+        sportBracket.right.semifinal.forEach(m => {
+            if (m.team1 && m.team2) {
+                allMatches.push({ ...m, round: 'Semi Final' });
+            }
+        });
+    }
+    
+    // 4. Final
+    if (sportBracket?.final && sportBracket.final.team1 && sportBracket.final.team2) {
+        allMatches.push({ 
+            ...sportBracket.final, 
+            round: 'Final'
+        });
+    }
+    
+    // 5. Perebutan Juara 3
+    if (sportBracket?.thirdPlace && sportBracket.thirdPlace.team1 && sportBracket.thirdPlace.team2) {
+        allMatches.push({ 
+            ...sportBracket.thirdPlace, 
+            round: 'Perebutan Juara 3'
+        });
+    }
+    
+    // ========== FUNGSI UNTUK MENGURUTKAN MATCH ==========
+    const parseDate = (dateStr) => {
+        if (!dateStr || dateStr === 'TBA') return new Date(9999, 11, 31);
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        return new Date(dateStr);
+    };
+    
     const sortByDate = (matches) => {
         if (!matches || matches.length === 0) return [];
         return [...matches].sort((a, b) => {
@@ -1790,81 +1916,10 @@ function renderSports() {
         });
     };
     
-    // Fungsi parse tanggal DD/MM/YYYY ke Date
-    const parseDate = (dateStr) => {
-        if (!dateStr || dateStr === 'TBA') return new Date(9999, 11, 31);
-        const parts = dateStr.split('/');
-        if (parts.length === 3) {
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-        }
-        return new Date(dateStr);
-    };
-
-    // Kumpulkan semua match dari semua babak
-    const allMatches = [];
-    
-    // Kumpulkan match dari penyisihan
-    if (sportBracket?.left?.penyisihan) {
-        sportBracket.left.penyisihan.forEach(m => {
-            if (m.team1 && m.team2 && m.team1 !== 'BY' && m.team2 !== 'BY') {
-                allMatches.push({ ...m, round: 'Penyisihan', side: 'Kiri' });
-            }
-        });
-    }
-    if (sportBracket?.right?.penyisihan) {
-        sportBracket.right.penyisihan.forEach(m => {
-            if (m.team1 && m.team2 && m.team1 !== 'BY' && m.team2 !== 'BY') {
-                allMatches.push({ ...m, round: 'Penyisihan', side: 'Kanan' });
-            }
-        });
-    }
-    
-    // Kumpulkan match dari perempat final
-    if (sportBracket?.left?.perempat) {
-        sportBracket.left.perempat.forEach(m => {
-            if (m.team1 && m.team2) {
-                allMatches.push({ ...m, round: 'Perempat Final', side: 'Kiri' });
-            }
-        });
-    }
-    if (sportBracket?.right?.perempat) {
-        sportBracket.right.perempat.forEach(m => {
-            if (m.team1 && m.team2) {
-                allMatches.push({ ...m, round: 'Perempat Final', side: 'Kanan' });
-            }
-        });
-    }
-    
-    // Kumpulkan match dari semi final
-    if (sportBracket?.left?.semifinal) {
-        sportBracket.left.semifinal.forEach(m => {
-            if (m.team1 && m.team2) {
-                allMatches.push({ ...m, round: 'Semi Final', side: 'Kiri' });
-            }
-        });
-    }
-    if (sportBracket?.right?.semifinal) {
-        sportBracket.right.semifinal.forEach(m => {
-            if (m.team1 && m.team2) {
-                allMatches.push({ ...m, round: 'Semi Final', side: 'Kanan' });
-            }
-        });
-    }
-    
-    // Tambahkan final
-    if (sportBracket?.final && sportBracket.final.team1 && sportBracket.final.team2) {
-        allMatches.push({ ...sportBracket.final, round: 'Final', side: 'Tengah' });
-    }
-    
-    // Tambahkan perebutan juara 3
-    if (sportBracket?.thirdPlace && sportBracket.thirdPlace.team1 && sportBracket.thirdPlace.team2) {
-        allMatches.push({ ...sportBracket.thirdPlace, round: 'Perebutan Juara 3', side: 'Tengah' });
-    }
-    
-    // Urutkan berdasarkan tanggal
     const sortedMatches = sortByDate(allMatches);
+    console.log('📅 Sorted Matches:', sortedMatches);
     
-    // Generate HTML untuk jadwal pertandingan (URUT BERDASARKAN TANGGAL)
+    // ========== GENERATE HTML JADWAL PERTANDINGAN ==========
     let matchesHtml = '<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mt-6">';
     matchesHtml += '<div class="flex justify-between items-center mb-4">';
     matchesHtml += '<h3 class="text-xl font-black text-red-700 dark:text-red-400 flex items-center gap-2"><i class="fas fa-calendar-alt"></i>Jadwal Pertandingan</h3>';
@@ -1872,7 +1927,6 @@ function renderSports() {
     matchesHtml += '</div>';
     
     if (sortedMatches.length > 0) {
-        // Kelompokkan berdasarkan tanggal
         const groupedByDate = {};
         sortedMatches.forEach(match => {
             const dateKey = match.date || 'TBA';
@@ -1882,14 +1936,10 @@ function renderSports() {
             groupedByDate[dateKey].push(match);
         });
         
-        // Urutkan tanggal
         const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
-            const dateA = parseDate(a);
-            const dateB = parseDate(b);
-            return dateA - dateB;
+            return parseDate(a) - parseDate(b);
         });
         
-        // Generate HTML per tanggal
         sortedDates.forEach(date => {
             const matchesOnDate = groupedByDate[date];
             const displayDate = date === 'TBA' ? 'Jadwal Menyusul' : formatDisplayDateWithDay(date);
@@ -1905,7 +1955,6 @@ function renderSports() {
             `;
             
             matchesOnDate.forEach(match => {
-                // Tentukan badge warna untuk setiap babak
                 let roundBadge = '';
                 if (match.round === 'Penyisihan') roundBadge = '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Babak Penyisihan</span>';
                 else if (match.round === 'Perempat Final') roundBadge = '<span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Perempat Final</span>';
@@ -1923,12 +1972,12 @@ function renderSports() {
                         </div>
                         <div class="flex justify-between items-center">
                             <div class="text-center flex-1">
-                                <div class="font-bold text-sm">${match.team1}</div>
+                                <div class="font-bold text-sm">${match.team1 || '__________'}</div>
                                 <div class="text-xl font-bold ${match.score1 !== '-' ? 'text-red-600' : 'text-gray-400'}">${match.score1 !== '-' ? match.score1 : '-'}</div>
                             </div>
                             <div class="text-gray-400 font-bold px-2">VS</div>
                             <div class="text-center flex-1">
-                                <div class="font-bold text-sm">${match.team2}</div>
+                                <div class="font-bold text-sm">${match.team2 || '__________'}</div>
                                 <div class="text-xl font-bold ${match.score2 !== '-' ? 'text-red-600' : 'text-gray-400'}">${match.score2 !== '-' ? match.score2 : '-'}</div>
                             </div>
                         </div>
@@ -1948,72 +1997,8 @@ function renderSports() {
     
     matchesHtml += '</div>';
     
-   // Helper format tanggal menjadi "14 Juni 2026"
-function formatDisplayDate(dateStr) {
-    if (!dateStr || dateStr === 'TBA') return 'Jadwal Menyusul';
-    
-    // Jika sudah dalam format DD/MM/YYYY
-    if (dateStr.includes('/')) {
-        const parts = dateStr.split('/');
-        if (parts.length === 3) {
-            const day = parseInt(parts[0]);
-            const month = parseInt(parts[1]);
-            const year = parts[2];
-            const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            return `${day} ${bulan[month - 1]} ${year}`;
-        }
-    }
-    
-    // Jika dalam format YYYY-MM-DD
-    if (dateStr.includes('-')) {
-        const parts = dateStr.split('-');
-        if (parts.length === 3) {
-            const year = parts[0];
-            const month = parseInt(parts[1]);
-            const day = parseInt(parts[2]);
-            const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            return `${day} ${bulan[month - 1]} ${year}`;
-        }
-    }
-    
-    return dateStr;
-}
-
-// Format dengan hari: "Minggu, 14 Juni 2026"
-function formatDisplayDateWithDay(dateStr) {
-    if (!dateStr || dateStr === 'TBA') return 'Jadwal Menyusul';
-    
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    
-    if (dateStr.includes('/')) {
-        const parts = dateStr.split('/');
-        if (parts.length === 3) {
-            const day = parseInt(parts[0]);
-            const month = parseInt(parts[1]);
-            const year = parts[2];
-            const date = new Date(year, month - 1, day);
-            const dayName = days[date.getDay()];
-            const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            return `${dayName}, ${day} ${bulan[month - 1]} ${year}`;
-        }
-    }
-    
-    if (dateStr.includes('-')) {
-        const parts = dateStr.split('-');
-        if (parts.length === 3) {
-            const year = parts[0];
-            const month = parseInt(parts[1]);
-            const day = parseInt(parts[2]);
-            const date = new Date(year, month - 1, day);
-            const dayName = days[date.getDay()];
-            const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            return `${dayName}, ${day} ${bulan[month - 1]} ${year}`;
-        }
-    }
-    
-    return dateStr;
-}
-document.getElementById('sportDetailContent').innerHTML = `
+    // ========== RENDER HTML ==========
+    document.getElementById('sportDetailContent').innerHTML = `
         <div class="bg-gradient-to-r ${sport.color} rounded-2xl p-8 text-white mb-6">
             <h2 class="text-4xl font-black mb-2">
                 <i class="fas ${sport.icon} mr-2"></i>${sport.name}
@@ -2028,19 +2013,19 @@ document.getElementById('sportDetailContent').innerHTML = `
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <span>Babak Penyisihan</span>
-                        <span class="font-bold">${formatDisplayDateWithDay(sport.schedule.penyisihan || sportBracket?.left?.penyisihan?.[0]?.date || 'TBA')}</span>
+                        <span class="font-bold">${formatDisplayDateWithDay(penyisihanDate)}</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <span>Perempat Final</span>
-                        <span class="font-bold">${formatDisplayDateWithDay(sport.schedule.perempatFinal || sportBracket?.left?.perempat?.[0]?.date || 'TBA')}</span>
+                        <span class="font-bold">${formatDisplayDateWithDay(perempatDate)}</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <span>Semi Final</span>
-                        <span class="font-bold">${formatDisplayDateWithDay(sport.schedule.semiFinal || sportBracket?.left?.semifinal?.[0]?.date || 'TBA')}</span>
+                        <span class="font-bold">${formatDisplayDateWithDay(semiDate)}</span>
                     </div>
                     <div class="flex justify-between p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded">
-                        <span class="font-bold">Final</span>
-                        <span class="font-black">${formatDisplayDateWithDay(sport.schedule.final || sportBracket?.final?.date || 'TBA')}</span>
+                        <span class="font-bold">Final & Juara 3</span>
+                        <span class="font-black">${formatDisplayDateWithDay(finalDate)}</span>
                     </div>
                 </div>
             </div>
@@ -2052,21 +2037,21 @@ document.getElementById('sportDetailContent').innerHTML = `
                     <div class="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
                         <div class="text-3xl">🥇</div>
                         <div>
-                            <div class="font-bold">${sportBracket?.final?.winner || sport.winners.juara1 || 'Belum ditentukan'}</div>
+                            <div class="font-bold">${sportBracket?.final?.winner || 'Belum ditentukan'}</div>
                             <div class="text-xs text-gray-500">Juara 1</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border-l-4 border-gray-400">
                         <div class="text-3xl">🥈</div>
                         <div>
-                            <div class="font-bold">${sportBracket?.final?.loser || sport.winners.juara2 || 'Belum ditentukan'}</div>
+                            <div class="font-bold">${sportBracket?.final?.loser || 'Belum ditentukan'}</div>
                             <div class="text-xs text-gray-500">Juara 2</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-500">
                         <div class="text-3xl">🥉</div>
                         <div>
-                            <div class="font-bold">${sportBracket?.thirdPlace?.winner || sport.winners.juara3 || 'Belum ditentukan'}</div>
+                            <div class="font-bold">${sportBracket?.thirdPlace?.winner || 'Belum ditentukan'}</div>
                             <div class="text-xs text-gray-500">Juara 3</div>
                         </div>
                     </div>
@@ -2078,6 +2063,42 @@ document.getElementById('sportDetailContent').innerHTML = `
     
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
+
+// Helper function format tanggal dengan hari
+function formatDisplayDateWithDay(dateStr) {
+    if (!dateStr || dateStr === 'TBA') return 'Jadwal Menyusul';
+    
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const year = parseInt(parts[2]);
+            const date = new Date(year, month - 1, day);
+            const dayName = days[date.getDay()];
+            return `${dayName}, ${day} ${months[month - 1]} ${year}`;
+        }
+    }
+    
+    if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const day = parseInt(parts[2]);
+            const date = new Date(year, month - 1, day);
+            const dayName = days[date.getDay()];
+            const monthName = months[month - 1];
+            return `${dayName}, ${day} ${monthName} ${year}`;
+        }
+    }
+    
+    return dateStr;
+}
+
 
 function backToSports() {
     document.getElementById('sportsGrid').classList.remove('hidden');
