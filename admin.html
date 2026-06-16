@@ -23,6 +23,31 @@
         .animate-in { animation: in .3s ease-out; }
         @keyframes in { from { opacity:0; transform: translateY(8px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
         .shadow-soft { box-shadow: 0 10px 30px -10px rgba(220,38,38,.25), 0 4px 12px -4px rgba(0,0,0,.08); }
+        /* Gallery Grid */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.gallery-card {
+    transition: all 0.3s ease;
+}
+
+.gallery-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.gallery-image {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-card:hover .gallery-image {
+    transform: scale(1.05);
+}
     </style>
 </head>
 <body class="antialiased text-slate-800">
@@ -93,6 +118,7 @@
                 <button data-nav="pengumuman" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"><i class="fas fa-bullhorn w-5"></i> Pengumuman</button>
                 <button data-nav="peserta" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"><i class="fas fa-users w-5"></i> Peserta</button>
                 <button data-nav="pertandingan" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"><i class="fas fa-futbol w-5"></i> Pertandingan</button>
+                <button data-nav="gallery" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"><i class="fas fa-cog w-5"></i> Gallery</button>
                 <button data-nav="pengaturan" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"><i class="fas fa-cog w-5"></i> Pengaturan</button>
             </nav>
             <div class="p-3 border-t border-slate-200">
@@ -174,6 +200,23 @@
                         </div>
                     </div>
                 </section>
+                <!-- GALLERY VIEW -->
+<section id="view-gallery" class="view hidden space-y-6 animate-in">
+    <div class="flex justify-between items-center flex-wrap gap-3">
+        <div>
+            <h2 class="text-2xl font-extrabold">📸 Galeri Foto</h2>
+            <p class="text-slate-500 text-sm">Kelola foto dokumentasi kegiatan</p>
+        </div>
+        <button id="btnAddPhoto" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-soft">
+            <i class="fas fa-plus"></i> Tambah Foto
+        </button>
+    </div>
+    
+    <!-- Gallery Grid -->
+    <div id="adminGalleryGrid" class="gallery-grid">
+        <!-- Akan diisi JavaScript -->
+    </div>
+</section>
             </main>
             <footer class="px-4 lg:px-8 py-6 text-center text-xs text-slate-500">© 2025 Karang Taruna RW XI Bekasi Jaya • Dibuat dengan semangat Merah Putih</footer>
         </div>
@@ -307,6 +350,60 @@
     </div>
 </div>
 
+<!-- Modal Tambah/Edit Foto -->
+<div id="modalPhoto" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md animate-in">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            <h3 id="photoModalTitle" class="text-xl font-extrabold">Tambah Foto Baru</h3>
+            <button onclick="closePhotoModal()" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="p-6 space-y-4">
+            <input type="hidden" id="editPhotoId">
+            
+            <div>
+                <label class="block text-sm font-semibold mb-1">Judul Foto</label>
+                <input type="text" id="photoTitle" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-4 focus:ring-red-100 focus:border-red-500" placeholder="Contoh: Pembukaan Lomba">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-1">Kategori</label>
+                <select id="photoCategory" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-4 focus:ring-red-100 focus:border-red-500">
+                    <option value="pembukaan">🎉 Pembukaan</option>
+                    <option value="pertandingan">⚽ Pertandingan</option>
+                    <option value="suporter">📣 Suporter</option>
+                    <option value="juara">🏆 Juara</option>
+                    <option value="malam">🌙 Malam Puncak</option>
+                    <option value="dokumentasi">📷 Dokumentasi</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-1">URL Gambar</label>
+                <input type="text" id="photoUrl" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-4 focus:ring-red-100 focus:border-red-500" placeholder="https://drive.google.com/uc?export=view&id=...">
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Cara: Upload ke Google Drive → Share → Anyone with link → Copy link → Ambil ID, buat URL: 
+                    <code class="bg-gray-100 px-1 rounded">https://drive.google.com/uc?export=view&id=FILE_ID</code>
+                </p>
+            </div>
+            
+            <div class="pt-2 flex gap-3">
+                <button onclick="closePhotoModal()" class="flex-1 py-2.5 rounded-xl border border-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700">Batal</button>
+                <button onclick="savePhoto()" class="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Preview Foto -->
+<!-- Preview -->
+<div id="imagePreview" class="hidden mt-2">
+    <p class="text-xs text-gray-500 mb-1">Preview:</p>
+    <img id="previewImg" src="" alt="Preview" class="w-32 h-32 object-cover rounded-lg border">
+</div>
     <script>    
     let chartRT = null;
     let activeCabor = CABOR[0];
@@ -844,6 +941,7 @@ async function deleteMatch(id) {
     toast('Berhasil', 'Pertandingan dihapus');
 }
 
+
 // Export ke window
 window.openAddMatchModal = openAddMatchModal;
 window.openEditMatchModal = openEditMatchModal;
@@ -984,6 +1082,234 @@ window.saveAnnouncement = async function() {
             </div>
         `).join('');
     }
+}
+
+// ==================== GALLERY MANAGEMENT ====================
+let adminGallery = [];
+
+async function renderAdminGallery() {
+    const container = document.getElementById('adminGalleryGrid');
+    if (!container) return;
+    
+    console.log('🖼️ Rendering admin gallery...');
+    
+    try {
+        adminGallery = await getGallery();
+        console.log('Gallery data:', adminGallery);
+        
+        if (!adminGallery || adminGallery.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                        <i class="fas fa-images text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="font-bold text-lg">Belum ada foto</h3>
+                    <p class="text-sm text-gray-500 mb-4">Klik tombol "Tambah Foto" untuk menambahkan dokumentasi</p>
+                    <button onclick="openAddPhotoModal()" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">
+                        <i class="fas fa-plus mr-1"></i> Tambah Foto Pertama
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        const categoryLabels = {
+            pembukaan: '🎉 Pembukaan',
+            pertandingan: '⚽ Pertandingan',
+            suporter: '📣 Suporter',
+            juara: '🏆 Juara',
+            malam: '🌙 Malam Puncak',
+            dokumentasi: '📷 Dokumentasi'
+        };
+        
+        container.innerHTML = adminGallery.map(photo => `
+            <div class="gallery-card bg-white dark:bg-gray-800 rounded-2xl border border-slate-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-lg transition cursor-pointer" onclick="previewPhoto('${photo.imageUrl}', '${escapeHtml(photo.title)}')">
+                <div class="relative overflow-hidden bg-gray-100 dark:bg-gray-700" style="aspect-ratio: 1/1;">
+                    <img src="${photo.imageUrl}" 
+                         alt="${escapeHtml(photo.title)}"
+                         class="gallery-image w-full h-full object-cover"
+                         onerror="this.src='https://placehold.co/400x400/e5e7eb/9ca3af?text=No+Image'; this.onerror=null">
+                </div>
+                <div class="p-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-sm truncate">${escapeHtml(photo.title)}</h4>
+                            <p class="text-xs text-gray-500 mt-0.5">${categoryLabels[photo.category] || photo.category}</p>
+                        </div>
+                        <div class="flex gap-1">
+                            <button onclick="event.stopPropagation(); openEditPhotoModal('${photo.id}')" class="p-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); deletePhoto('${photo.id}')" class="p-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">
+                        <i class="far fa-calendar-alt mr-1"></i>${formatDate(photo.date)}
+                    </p>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error renderAdminGallery:', error);
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-2"></i>
+                <p class="text-gray-500">Gagal memuat galeri</p>
+                <button onclick="renderAdminGallery()" class="mt-2 text-red-600 underline">Coba lagi</button>
+            </div>
+        `;
+    }
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    } catch(e) {
+        return dateStr;
+    }
+}
+
+function previewPhoto(imageUrl, title) {
+    document.getElementById('previewImage').src = imageUrl;
+    document.getElementById('previewCaption').innerHTML = title;
+    document.getElementById('modalPreview').classList.remove('hidden');
+    document.getElementById('modalPreview').classList.add('flex');
+}
+
+function closePreviewModal() {
+    document.getElementById('modalPreview').classList.add('hidden');
+    document.getElementById('modalPreview').classList.remove('flex');
+}
+
+function openAddPhotoModal() {
+    document.getElementById('photoModalTitle').textContent = 'Tambah Foto Baru';
+    document.getElementById('editPhotoId').value = '';
+    document.getElementById('photoTitle').value = '';
+    document.getElementById('photoCategory').value = 'dokumentasi';
+    document.getElementById('photoUrl').value = '';
+    document.getElementById('modalPhoto').classList.remove('hidden');
+    document.getElementById('modalPhoto').classList.add('flex');
+}
+
+function openEditPhotoModal(id) {
+    const photo = adminGallery.find(p => p.id === id);
+    if (!photo) return;
+    
+    document.getElementById('photoModalTitle').textContent = 'Edit Foto';
+    document.getElementById('editPhotoId').value = photo.id;
+    document.getElementById('photoTitle').value = photo.title;
+    document.getElementById('photoCategory').value = photo.category;
+    document.getElementById('photoUrl').value = photo.imageUrl;
+    document.getElementById('modalPhoto').classList.remove('hidden');
+    document.getElementById('modalPhoto').classList.add('flex');
+}
+
+async function savePhoto() {
+    const id = document.getElementById('editPhotoId').value;
+    let title = document.getElementById('photoTitle').value.trim();
+    const category = document.getElementById('photoCategory').value;
+    let imageUrl = document.getElementById('photoUrl').value.trim();
+    
+    if (!title) {
+        alert('Judul foto harus diisi!');
+        return;
+    }
+    if (!imageUrl) {
+        alert('URL gambar harus diisi!');
+        return;
+    }
+    
+    // Validasi dan konversi URL
+    if (imageUrl.includes('drive.google.com')) {
+        // Konversi ke format direct link
+        if (imageUrl.includes('/d/')) {
+            const match = imageUrl.match(/\/d\/(.+?)\//);
+            if (match) {
+                imageUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+            }
+        } else if (imageUrl.includes('open?id=')) {
+            const match = imageUrl.match(/open\?id=(.+)/);
+            if (match) {
+                imageUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+            }
+        } else if (imageUrl.includes('uc?export=view')) {
+            // Sudah benar
+        } else {
+            alert('Format URL Google Drive tidak dikenali. Gunakan link share dari Google Drive.');
+            return;
+        }
+    }
+    
+    // Test image dengan fetch (CORS mungkin gagal, tapi lanjutkan)
+    console.log('Saving image URL:', imageUrl);
+    
+    if (id) {
+        await updateGalleryItem(id, { title, category, imageUrl });
+        alert('✅ Foto berhasil diupdate');
+    } else {
+        await addGalleryItem({ title, category, imageUrl });
+        alert('✅ Foto berhasil ditambahkan');
+    }
+    
+    closePhotoModal();
+    await renderAdminGallery();
+}
+
+async function deletePhoto(id) {
+    if (confirm('Yakin ingin menghapus foto ini?')) {
+        await deleteGalleryItem(id);
+        await renderAdminGallery();
+        alert('✅ Foto dihapus');
+    }
+}
+
+function closePhotoModal() {
+    document.getElementById('modalPhoto').classList.add('hidden');
+    document.getElementById('modalPhoto').classList.remove('flex');
+}
+
+// Di bagian inisialisasi
+document.getElementById('btnAddPhoto')?.addEventListener('click', openAddPhotoModal);
+// Di admin.html, tambahkan event listener untuk preview
+document.getElementById('photoUrl')?.addEventListener('input', function() {
+    const url = this.value.trim();
+    const previewDiv = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    
+    if (url) {
+        let previewUrl = url;
+        // Konversi untuk preview
+        if (url.includes('/d/')) {
+            const match = url.match(/\/d\/(.+?)\//);
+            if (match) {
+                previewUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+            }
+        }
+        previewImg.src = previewUrl;
+        previewDiv.classList.remove('hidden');
+        previewImg.onerror = () => {
+            previewImg.src = 'https://placehold.co/400x400/e5e7eb/9ca3af?text=Invalid+URL';
+        };
+    } else {
+        previewDiv.classList.add('hidden');
+    }
+});
+
+// Escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 // ==================== ADMIN ====================
 async function getAdmins() {
@@ -1185,7 +1511,7 @@ async function saveAdmins(admins) {
     function switchView(name) {
         $$('.view').forEach(v => v.classList.add('hidden'));
         $(`#view-${name}`).classList.remove('hidden');
-        $('#pageTitle').textContent = { dashboard: 'Dashboard', pengumuman: 'Pengumuman', peserta: 'Peserta', pertandingan: 'Pertandingan', pengaturan: 'Pengaturan' }[name];
+        $('#pageTitle').textContent = { dashboard: 'Dashboard', pengumuman: 'Pengumuman', peserta: 'Peserta', pertandingan: 'Pertandingan', pengaturan: 'Pengaturan',gallery:'Gallery' }[name];
         $$('.nav-btn').forEach(b => {
             b.classList.toggle('bg-red-50', b.dataset.nav === name);
             b.classList.toggle('text-red-700', b.dataset.nav === name);

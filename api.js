@@ -502,94 +502,85 @@ function formatTimeFromSpreadsheet(timeValue) {
 }
 
 // ==================== GALLERY ====================
-// ==================== GALLERY ====================
-async function getGallery() {
-    try {
-        // Coba ambil dari localStorage dulu
-        const cached = localStorage.getItem('app_gallery');
-        if (cached) {
-            console.log('📸 Using cached gallery');
-            return JSON.parse(cached);
-        }
-        
-        // Jika tidak ada, coba dari API
-        const data = await callAPI('get', 'Gallery');
-        
-        if (Array.isArray(data) && data.length > 0) {
-            const gallery = data.map(row => ({
-                id: row.id,
-                title: row.title || 'Foto Dokumentasi',
-                category: row.category || 'dokumentasi',
-                imageUrl: row.image_url || row.imageUrl,
-                thumbnailUrl: row.thumbnail_url || row.image_url,
-                date: row.date || new Date().toISOString()
-            }));
-            
-            localStorage.setItem('app_gallery', JSON.stringify(gallery));
-            return gallery;
-        }
-        
-        return [];
-        
-    } catch (error) {
-        console.error('Error getGallery:', error);
-        const cached = localStorage.getItem('app_gallery');
-        return cached ? JSON.parse(cached) : [];
+
+// Data gallery disimpan di localStorage (bisa sync ke spreadsheet nanti)
+
+function convertGoogleDriveUrl(url) {
+    if (!url) return '';
+    
+    // Jika sudah dalam format yang benar
+    if (url.includes('uc?export=view')) {
+        return url;
     }
+    
+    // Konversi dari share link
+    if (url.includes('drive.google.com/file/d/')) {
+        const match = url.match(/\/d\/(.+?)\//);
+        if (match) {
+            return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        }
+    }
+    
+    // Konversi dari open?id=
+    if (url.includes('open?id=')) {
+        const match = url.match(/open\?id=(.+)/);
+        if (match) {
+            return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        }
+    }
+    
+    return url;
 }
 
-async function saveGallery(gallery) {
-    // Simpan ke localStorage
-    localStorage.setItem('app_gallery', JSON.stringify(gallery));
-    console.log('💾 Gallery saved to localStorage:', gallery.length);
-    
-    // Coba simpan ke spreadsheet (optional)
+async function getGallery() {
     try {
-        const toSave = gallery.map(item => ({
-            id: item.id,
-            title: item.title,
-            category: item.category,
-            image_url: item.imageUrl,
-            date: item.date
-        }));
-        
-        await callAPI('save', 'Gallery', toSave);
-        console.log('💾 Gallery saved to spreadsheet');
+        const cached = localStorage.getItem('app_gallery');
+        if (cached) {
+            let gallery = JSON.parse(cached);
+            // Pastikan semua URL sudah dikonversi
+            gallery = gallery.map(item => ({
+                ...item,
+                imageUrl: convertGoogleDriveUrl(item.imageUrl)
+            }));
+            return gallery;
+        }
+        return [];
     } catch (error) {
-        console.warn('Cannot save to spreadsheet:', error);
+        console.error('Error getGallery:', error);
+        return [];
     }
 }
 
 async function addGalleryItem(item) {
     const gallery = await getGallery();
-    item.id = item.id || Date.now().toString();
-    item.date = item.date || new Date().toISOString();
-    gallery.push(item);
-    await saveGallery(gallery);
-    return item;
+    const newItem = {
+        id: Date.now().toString(),
+        title: item.title || 'Foto Dokumentasi',
+        category: item.category || 'dokumentasi',
+        imageUrl: convertGoogleDriveUrl(item.imageUrl),
+        date: new Date().toISOString()
+    };
+    gallery.unshift(newItem);
+    localStorage.setItem('app_gallery', JSON.stringify(gallery));
+    return newItem;
 }
 
 async function updateGalleryItem(id, updates) {
     const gallery = await getGallery();
     const index = gallery.findIndex(item => item.id === id);
     if (index !== -1) {
+        if (updates.imageUrl) {
+            updates.imageUrl = convertGoogleDriveUrl(updates.imageUrl);
+        }
         gallery[index] = { ...gallery[index], ...updates };
-        await saveGallery(gallery);
+        localStorage.setItem('app_gallery', JSON.stringify(gallery));
         return true;
     }
     return false;
 }
+window.deleteGalleryItem = deleteGalleryItem;
 
-async function deleteGalleryItem(id) {
-    const gallery = await getGallery();
-    const filtered = gallery.filter(item => item.id != id);
-    await saveGallery(filtered);
-    return true;
-}
-
-
-// Export ke window
-
+console.log('✅ Gallery functions loaded');
 
 // ==================== TEST ====================
 async function testAPI() {
