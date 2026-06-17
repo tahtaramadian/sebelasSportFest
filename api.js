@@ -605,8 +605,8 @@ window.getBracketData = getBracketData;
 window.saveBracketData = saveBracketData;
 window.getGallery = getGallery;
 window.saveGallery = saveGallery;
-window.addGalleryItem = addGalleryItem;
-window.deleteGalleryItem = deleteGalleryItem;
+//window.addGalleryItem = addGalleryItem;
+//window.deleteGalleryItem = deleteGalleryItem;
 window.testAPI = testAPI;
 
 console.log('✅ API.js loaded with Google Spreadsheet integration');
