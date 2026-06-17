@@ -16,13 +16,12 @@ const DEFAULT_ANNOUNCEMENTS = [
     { id: 'a1', judul: 'Pembukaan Lomba', isi: 'Acara pembukaan 10 Agustus 2025', penting: true, date: new Date().toISOString() },
 ];
 
-// ==================== FUNGSI CALL API ====================
 async function callAPI(action, sheet, data = null) {
     const url = `${API_BASE_URL}?action=${action}&sheet=${sheet}&t=${Date.now()}`;
     
     const options = {
         method: data ? 'POST' : 'GET',
-        mode: 'no-cors',  // Gunakan no-cors untuk localhost
+        mode: 'no-cors',  // Ganti dari 'cors' ke 'no-cors'
         headers: {
             'Content-Type': 'application/json',
         }
@@ -30,13 +29,35 @@ async function callAPI(action, sheet, data = null) {
     
     if (data) {
         options.body = JSON.stringify(data);
+        console.log(`📤 POST to ${sheet}:`, data.length, 'records');
+    } else {
+        console.log(`📥 GET from ${sheet}`);
     }
     
     try {
-        await fetch(url, options);
-        console.log(`${action} request sent to ${sheet}`);
+        const response = await fetch(url, options);
         
-        // Untuk GET, ambil dari cache
+        // Karena mode 'no-cors', response tidak bisa dibaca
+        // Tapi request tetap terkirim
+        console.log(`✅ ${action} request sent to ${sheet}`);
+        
+        // Untuk GET, kita perlu data dari cache
+        if (action === 'get') {
+            // Coba ambil dari localStorage dulu
+            const cacheKey = `app_${sheet}`.toLowerCase();
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                console.log(`📦 Using cached ${sheet} data`);
+                return JSON.parse(cached);
+            }
+        }
+        
+        return [];
+        
+    } catch (error) {
+        console.error(`❌ ${action} error:`, error);
+        
+        // Fallback ke cache
         if (action === 'get') {
             const cacheKey = `app_${sheet}`.toLowerCase();
             const cached = localStorage.getItem(cacheKey);
@@ -45,17 +66,8 @@ async function callAPI(action, sheet, data = null) {
             }
         }
         return [];
-        
-    } catch (error) {
-        console.error(`API Error:`, error);
-        const cacheKey = `app_${sheet}`.toLowerCase();
-        const cached = localStorage.getItem(cacheKey);
-        return cached ? JSON.parse(cached) : [];
     }
 }
-
-
-
 // ==================== AMBIL DATA DARI SPREADSHEET ====================
 async function fetchFromSpreadsheet(sheetName) {
     try {
@@ -185,6 +197,7 @@ async function saveSettings(settings) {
 async function getMatches() {
     try {
         const spreadsheetData = await fetchFromSpreadsheet('Bracket');
+        //console.log('spreadsheetData', spreadsheetData);
         
         if (spreadsheetData && spreadsheetData.length > 0) {
             const matches = spreadsheetData.map(row => ({
@@ -259,12 +272,10 @@ async function updateMatchScore(matchId, skorA, skorB) {
 }
 
 // ==================== BRACKET DATA UNTUK INDEX ====================
+
 async function getBracketData() {
     try {
-        const matches = await getMatches();
-        console.log('Match nya', matches);
-        console.log('📦 Matches for bracket:', matches);
-        
+        const matches = await getMatches();        
         const brackets = {};
         const sportMap = {
             'Futsal': 'futsal',
@@ -403,7 +414,7 @@ async function getBracketData() {
             });
         });
         
-        console.log('✅ Processed brackets:', brackets);
+       // console.log('✅ Processed brackets:', brackets);
         return brackets;
         
     } catch (error) {
@@ -502,18 +513,15 @@ function formatTimeFromSpreadsheet(timeValue) {
 }
 
 // ==================== GALLERY ====================
-// ==================== GALLERY ====================
+// Data gallery disimpan di localStorage (bisa sync ke spreadsheet nanti)
+
 async function getGallery() {
+    console.log('📸 Fetching gallery from spreadsheet...');
+    
     try {
-        // Coba ambil dari localStorage dulu
-        const cached = localStorage.getItem('app_gallery');
-        if (cached) {
-            console.log('📸 Using cached gallery');
-            return JSON.parse(cached);
-        }
-        
-        // Jika tidak ada, coba dari API
+        // Ambil dari spreadsheet
         const data = await callAPI('get', 'Gallery');
+        console.log('📸 Raw gallery data:', data);
         
         if (Array.isArray(data) && data.length > 0) {
             const gallery = data.map(row => ({
@@ -521,12 +529,19 @@ async function getGallery() {
                 title: row.title || 'Foto Dokumentasi',
                 category: row.category || 'dokumentasi',
                 imageUrl: row.image_url || row.imageUrl,
-                thumbnailUrl: row.thumbnail_url || row.image_url,
                 date: row.date || new Date().toISOString()
             }));
             
+            // Simpan ke cache
             localStorage.setItem('app_gallery', JSON.stringify(gallery));
             return gallery;
+        }
+        
+        // Fallback ke cache
+        const cached = localStorage.getItem('app_gallery');
+        if (cached) {
+            console.log('📸 Using cached gallery');
+            return JSON.parse(cached);
         }
         
         return [];
@@ -539,56 +554,23 @@ async function getGallery() {
 }
 
 async function saveGallery(gallery) {
-    // Simpan ke localStorage
-    localStorage.setItem('app_gallery', JSON.stringify(gallery));
-    console.log('💾 Gallery saved to localStorage:', gallery.length);
+    console.log('💾 Saving gallery...');
     
-    // Coba simpan ke spreadsheet (optional)
-    try {
-        const toSave = gallery.map(item => ({
-            id: item.id,
-            title: item.title,
-            category: item.category,
-            image_url: item.imageUrl,
-            date: item.date
-        }));
-        
-        await callAPI('save', 'Gallery', toSave);
-        console.log('💾 Gallery saved to spreadsheet');
-    } catch (error) {
-        console.warn('Cannot save to spreadsheet:', error);
-    }
+    // Simpan ke cache
+    localStorage.setItem('app_gallery', JSON.stringify(gallery));
+    
+    // Simpan ke spreadsheet
+    const toSave = gallery.map(item => ({
+        id: item.id,
+        title: item.title,
+        category: item.category,
+        image_url: item.imageUrl,
+        date: item.date
+    }));
+    
+    await callAPI('save', 'Gallery', toSave);
+    console.log('✅ Gallery saved');
 }
-
-async function addGalleryItem(item) {
-    const gallery = await getGallery();
-    item.id = item.id || Date.now().toString();
-    item.date = item.date || new Date().toISOString();
-    gallery.push(item);
-    await saveGallery(gallery);
-    return item;
-}
-
-async function updateGalleryItem(id, updates) {
-    const gallery = await getGallery();
-    const index = gallery.findIndex(item => item.id === id);
-    if (index !== -1) {
-        gallery[index] = { ...gallery[index], ...updates };
-        await saveGallery(gallery);
-        return true;
-    }
-    return false;
-}
-
-async function deleteGalleryItem(id) {
-    const gallery = await getGallery();
-    const filtered = gallery.filter(item => item.id != id);
-    await saveGallery(filtered);
-    return true;
-}
-
-
-// Export ke window
 
 
 // ==================== TEST ====================
@@ -623,8 +605,8 @@ window.getBracketData = getBracketData;
 window.saveBracketData = saveBracketData;
 window.getGallery = getGallery;
 window.saveGallery = saveGallery;
-window.addGalleryItem = addGalleryItem;
-window.deleteGalleryItem = deleteGalleryItem;
+//window.addGalleryItem = addGalleryItem;
+//window.deleteGalleryItem = deleteGalleryItem;
 window.testAPI = testAPI;
 
 console.log('✅ API.js loaded with Google Spreadsheet integration');
