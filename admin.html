@@ -719,16 +719,16 @@ async function renderMatches() {
             <div class="flex justify-between items-center gap-4">
                 <div class="text-center flex-1">
                     <div class="font-bold text-sm">${m.timA}</div>
-                    <div class="text-2xl font-black ${m.skorA !== null ? 'text-red-600' : 'text-slate-400'} mt-1">
-                        ${m.skorA !== null ? m.skorA : '-'}
-                    </div>
+                    <div class="text-2xl font-black ${m.skorA !== null && m.skorA !== undefined ? 'text-red-600' : 'text-slate-400'} mt-1">
+    ${m.skorA !== null && m.skorA !== undefined ? m.skorA : '-'}
+</div>
                 </div>
                 <div class="text-slate-400 font-bold text-lg">VS</div>
                 <div class="text-center flex-1">
                     <div class="font-bold text-sm">${m.timB}</div>
-                    <div class="text-2xl font-black ${m.skorB !== null ? 'text-red-600' : 'text-slate-400'} mt-1">
-                        ${m.skorB !== null ? m.skorB : '-'}
-                    </div>
+                   <div class="text-2xl font-black ${m.skorB !== null && m.skorB !== undefined ? 'text-red-600' : 'text-slate-400'} mt-1">
+    ${m.skorB !== null && m.skorB !== undefined ? m.skorB : '-'}
+</div>
                 </div>
             </div>
             <div class="mt-3 pt-3 border-t flex gap-2">

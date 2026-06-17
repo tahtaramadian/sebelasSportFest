@@ -423,6 +423,7 @@ async function getBracketData() {
     }
 }
 
+
 async function saveBracketData(brackets) {
     localStorage.setItem('app_bracket', JSON.stringify(brackets));
     return { success: true };
@@ -602,6 +603,11 @@ window.saveMatches = saveMatches;
 window.updateMatchScore = updateMatchScore;
 window.getBracketData = getBracketData;
 window.saveBracketData = saveBracketData;
+window.getGallery = getGallery;
+window.saveGallery = saveGallery;
+window.addGalleryItem = addGalleryItem;
+window.deleteGalleryItem = deleteGalleryItem;
 window.testAPI = testAPI;
 
 console.log('✅ API.js loaded with Google Spreadsheet integration');
+

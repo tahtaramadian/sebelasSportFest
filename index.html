@@ -1097,16 +1097,6 @@ const SPORTS = [{
     }
 ];
 
-const SCHEDULES = [
-    { date:'10 Agu 2025', time:'19:00', title:'Technical Meeting', loc:'Aula RW XI', type:'meeting', icon:'fa-users-cog' },
-    { date:'15 Agu 2025', time:'08:00', title:'Pembukaan & Upacara', loc:'Lapangan RW XI', type:'opening', icon:'fa-flag' },
-    { date:'15 Agu 2025', time:'13:00', title:'Turnamen Futsal Dimulai', loc:'Lapangan Futsal', type:'sport', icon:'fa-futbol' },
-    { date:'16 Agu 2025', time:'08:00', title:'Turnamen Basket & Voli', loc:'Lapangan Sport Center', type:'sport', icon:'fa-basketball-ball' },
-    { date:'16 Agu 2025', time:'10:00', title:'Catur & Tenis Meja', loc:'Aula RW XI', type:'sport', icon:'fa-chess' },
-    { date:'16 Agu 2025', time:'14:00', title:'Badminton & E-Sport', loc:'Aula & Balai Warga', type:'sport', icon:'fa-gamepad' },
-    { date:'17 Agu 2025', time:'07:00', title:'Upacara HUT RI ke-80', loc:'Lapangan Utama', type:'ceremony', icon:'fa-star' },
-    { date:'17 Agu 2025', time:'19:00', title:'Malam Puncak & Pembagian Hadiah', loc:'Panggung Utama', type:'peak', icon:'fa-trophy' }
-];
 
 const STANDINGS = [
     { rt:'RT 01', emas:0, perak:0, perunggu:0, poin:0 },
@@ -1136,9 +1126,6 @@ const GALLERY_CATEGORIES = {
     malam: 'Malam Puncak',
     dokumentasi: 'Dokumentasi'
 };
-
-let currentGalleryCat = 'all';
-let galleryData = [];
 
 // ==================== RENDER PENGUMUMAN ====================
 async function renderAnnouncements() {
@@ -1772,7 +1759,8 @@ function renderSports() {
         </div>
     `).join('');
 }
-async function showSportDetail(id) {
+
+ async function showSportDetail(id) {
     const sport = SPORTS.find(s => s.id === id);
     if (!sport) return;
     
@@ -3775,6 +3763,63 @@ let currentBracket = 'futsal';
 let editMode = false;
 
 // ======================== DATA BRACKET PER CABANG OLAHRAGA ========================
+function getDefaultBracket() {
+    return {
+        left: {
+            penyisihan: [
+                { id: 'L1', team1: 'RT 1', team2: 'BY', score1: '-', score2: '-', winner: null, done: false, date: '07/06/2026', time: '08:00' },
+                { id: 'L2', team1: 'RT 2', team2: 'RT 3', score1: '-', score2: '-', winner: null, done: false, date: '07/06/2026', time: '09:00' },
+                { id: 'L3', team1: 'RT 4', team2: 'RT 5', score1: '-', score2: '-', winner: null, done: false, date: '08/06/2026', time: '08:00' },
+                { id: 'L4', team1: 'RT 6', team2: 'RT 7', score1: '-', score2: '-', winner: null, done: false, date: '08/06/2026', time: '09:00' }
+            ],
+            perempat: [
+                { id: 'LQF1', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '14/06/2026', time: '10:00' },
+                { id: 'LQF2', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '14/06/2026', time: '11:00' }
+            ],
+            semifinal: [
+                { id: 'LSF1', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '21/06/2026', time: '13:00' }
+            ]
+        },
+        right: {
+            penyisihan: [
+                { id: 'R1', team1: 'RT 8', team2: 'RT 9', score1: '-', score2: '-', winner: null, done: false, date: '09/06/2026', time: '08:00' },
+                { id: 'R2', team1: 'RT 10', team2: 'RT 11', score1: '-', score2: '-', winner: null, done: false, date: '09/06/2026', time: '09:00' },
+                { id: 'R3', team1: 'RT 12', team2: 'RT 13', score1: '-', score2: '-', winner: null, done: false, date: '10/06/2026', time: '08:00' },
+                { id: 'R4', team1: 'RT 14', team2: 'BY', score1: '-', score2: '-', winner: null, done: false, date: '10/06/2026', time: '09:00' }
+            ],
+            perempat: [
+                { id: 'RQF1', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '15/06/2026', time: '10:00' },
+                { id: 'RQF2', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '15/06/2026', time: '11:00' }
+            ],
+            semifinal: [
+                { id: 'RSF1', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '22/06/2026', time: '13:00' }
+            ]
+        },
+        final: {
+            id: 'FINAL',
+            team1: null,
+            team2: null,
+            score1: '-',
+            score2: '-',
+            winner: null,
+            done: false,
+            date: '',
+            time: ''
+        },
+        // TAMBAHKAN INI - Perebutan Juara 3
+        thirdPlace: {
+            id: 'THIRD',
+            team1: null,
+            team2: null,
+            score1: '-',
+            score2: '-',
+            winner: null,
+            done: false,
+            date: '',
+            time: ''
+        }
+    };
+}
 
 // Simpan semua data bracket per cabang olahraga
 let allBrackets = {};
@@ -4268,8 +4313,8 @@ async function renderBracket() {
                     score2: '-', 
                     winner: null, 
                     done: false,
-                    date: '',
-                    time: ''
+                    date: 'TBA',
+                    time: 'TBA'
                 },
                 thirdPlace: { 
                     id: 'THIRD',
@@ -4279,8 +4324,8 @@ async function renderBracket() {
                     score2: '-', 
                     winner: null, 
                     done: false,
-                    date: '',
-                    time: ''
+                    date: 'TBA',
+                    time: 'TBA'
                 }
             };
         }
