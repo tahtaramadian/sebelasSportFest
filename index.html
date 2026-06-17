@@ -63,20 +63,20 @@
             box-sizing: border-box;
         }
         /* Bracket Layout - Tanpa Garis */
-.bracket-wrapper {
-    overflow-x: auto;
-    width: 100%;
-    padding-bottom: 20px;
-}
+        .bracket-wrapper {
+         overflow-x: auto;
+        width: 100%;
+        padding-bottom: 20px;
+        }
 
-.bracket {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: 30px;
-    min-width: max-content;
-}
+        .bracket {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: stretch;
+        gap: 30px;
+        min-width: max-content;
+        }
 
 .bracket-side {
     display: flex;
@@ -87,18 +87,37 @@
 .round {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     min-width: 260px;
+    position: relative;
+}
+.round .match {
+    position: relative;
+    margin: 10px 0;
+}
+/* Untuk sisi kanan, agar BY di tengah */
+.bracket-side:last-child .round:first-child .match {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
+/* Atur ulang order match di penyisihan kanan */
+.bracket-side:last-child .round:last-child {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 .round-title {
     text-align: center;
     font-weight: bold;
     padding: 8px 12px;
     background: #1e293b;
     color: white;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 13px;
     margin-bottom: 20px;
+    flex-shrink: 0; /* Judul tidak ikut flex */
 }
 
 .match {
@@ -934,6 +953,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupMobileMenu();
     
 });
+
 const SPORTS = [{
         id: 'futsal',
         name: 'Futsal',
@@ -942,10 +962,11 @@ const SPORTS = [{
         teams: 15,
         desc: 'Permainan Futsal dengan 5 pemain per tim',
         schedule: {
-            penyisihan: '07 Juni 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
-            final: '28 Juni 2026'
+            third:'',
+            final: ''
         },
         winners: {
             juara1: '',
@@ -961,9 +982,10 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan bola basket antar RT',
          schedule: {
-            penyisihan: '14 Juni 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
+            third:'',
             final: ''
         },
         winners: {
@@ -981,9 +1003,10 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan bola voli 6 pemain',
        schedule: {
-            penyisihan: '28 Juni 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
+            third:'',
             final: ''
         },
         winners: {
@@ -1000,9 +1023,10 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan bulu tangkis tunggal & ganda',
         schedule: {
-            penyisihan: '07 Juli 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
+            third:'',
             final: ''
         },
         winners: {
@@ -1019,9 +1043,10 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan catur individu',
        schedule: {
-            penyisihan: '14 Juli 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
+            third:'',
             final: ''
         },
         winners: {
@@ -1038,9 +1063,10 @@ const SPORTS = [{
         teams: 15,
         desc: 'Turnamen Mobile Legends antar RT',
        schedule: {
-            penyisihan: '28 Juli 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
+            third:'',
             final: ''
         },
         winners: {
@@ -1057,9 +1083,10 @@ const SPORTS = [{
         teams: 15,
         desc: 'Pertandingan tenis meja individu',
        schedule: {
-            penyisihan: '28 Juli 2026',
+            penyisihan: '',
             perempatFinal: '',
             semiFinal: '',
+            third:'',
             final: ''
         },
         winners: {
@@ -1069,14 +1096,6 @@ const SPORTS = [{
         }
     }
 ];
-
-
-//const RT_LIST = Array.from({length:14}, (_,i)=> 'RT ' + String(i+1).padStart(2,'0'));
-// Data RT tetap
-//const RT_LIST = ['RT 1', 'RT 2', 'RT 3', 'RT 4', 'RT 5', 'RT 6', 'RT 7', 'RT 8', 'RT 9', 'RT 10', 'RT 11', 'RT 12', 'RT 13', 'RT 14', 'BY'];
-
-// const FIRST_NAMES = ['Ahmad','Budi','Citra','Dedi','Eko','Fitri','Galih','Hadi','Indra','Joko','Kartika','Lutfi','Maulana','Nanda','Oscar','Putri','Rian','Sari','Toni','Umi','Vina','Wahyu','Yanto','Zara','Bagas','Cahya','Dimas','Erlangga','Fajar','Gilang'];
-// const LAST_NAMES = ['Setiawan','Saputra','Pratama','Wijaya','Lestari','Putri','Hidayat','Nugroho','Maulana','Permadi','Sukma','Anggraini','Ramadhan','Fadilah','Kurniawan','Salsabila','Hakim','Maulana','Handayani','Saputri'];
 
 const SCHEDULES = [
     { date:'10 Agu 2025', time:'19:00', title:'Technical Meeting', loc:'Aula RW XI', type:'meeting', icon:'fa-users-cog' },
@@ -1107,25 +1126,20 @@ const STANDINGS = [
     { rt:'BY', emas:0, perak:0, perunggu:0, poin:0 },
 ];
 
-const GALLERY = [
-    { cat:'pembukaan', title:'Upacara Pembukaan', count:24 },
-    { cat:'pembukaan', title:'Pengibaran Bendera', count:18 },
-    { cat:'pertandingan', title:'Final Futsal', count:36 },
-    { cat:'pertandingan', title:'Pertandingan Basket', count:28 },
-    { cat:'suporter', title:'Suporter Antusias', count:42 },
-    { cat:'suporter', title:'Yel-yel RT', count:15 },
-    { cat:'juara', title:'Penyerahan Medali', count:22 },
-    { cat:'juara', title:'Foto Bersama Juara', count:30 },
-    { cat:'malam', title:'Malam Puncak', count:48 },
-    { cat:'malam', title:'Hiburan & Pentas Seni', count:36 },
-    { cat:'pertandingan', title:'Turnamen Voli', count:25 },
-    { cat:'juara', title:'Para Pemenang', count:20 }
-];
+// Kategori galeri
+const GALLERY_CATEGORIES = {
+    all: 'Semua',
+    pembukaan: 'Pembukaan',
+    pertandingan: 'Pertandingan',
+    suporter: 'Suporter',
+    juara: 'Juara',
+    malam: 'Malam Puncak',
+    dokumentasi: 'Dokumentasi'
+};
 
+let currentGalleryCat = 'all';
+let galleryData = [];
 
-
-
-// ==================== PENGUMUMAN ====================
 // ==================== RENDER PENGUMUMAN ====================
 async function renderAnnouncements() {
     try {
@@ -1758,15 +1772,241 @@ function renderSports() {
         </div>
     `).join('');
 }
-
- function showSportDetail(id) {
+async function showSportDetail(id) {
     const sport = SPORTS.find(s => s.id === id);
     if (!sport) return;
+    
+    // Ambil data bracket dari API
+    const brackets = await getBracketData();
+    const sportBracket = brackets[id] || null;
+    
+    console.log('📊 Sport Bracket Data:', sportBracket);
     
     document.getElementById('sportsGrid').classList.add('hidden');
     const detail = document.getElementById('sportDetail');
     detail.classList.remove('hidden');
     
+    // ========== DEFINISIKAN VARIABEL TANGGAL DI AWAL ==========
+    let penyisihanDate = 'TBA';
+    let perempatDate = 'TBA';
+    let semiDate = 'TBA';
+    let finalDate = 'TBA';
+    let thirdDate = 'TBA';
+    
+    // ========== AMBIL TANGGAL DARI BRACKET ==========
+    // Fungsi helper untuk mencari tanggal dari array match
+     const getFirstValidDate = (matchesArray) => {
+    if (!matchesArray || !Array.isArray(matchesArray) || matchesArray.length === 0) return 'TBA';
+    // Cari match yang bukan BY dan memiliki date
+    const matchWithDate = matchesArray.find(m => 
+        m.date && 
+        m.date !== 'TBA' && 
+        m.date !== '' &&
+        m.team1 !== 'BY' && 
+        m.team2 !== 'BY'
+    );
+    return matchWithDate ? matchWithDate.date : 'TBA';
+};
+
+    
+    // Ambil tanggal penyisihan (coba dari left dulu, lalu right)
+    let penyisihanLeft = getFirstValidDate(sportBracket?.left?.penyisihan);
+    let penyisihanRight = getFirstValidDate(sportBracket?.right?.penyisihan);
+    penyisihanDate = penyisihanLeft !== 'TBA' ? penyisihanLeft : penyisihanRight;
+    
+    // Ambil tanggal perempat final
+    let perempatLeft = getFirstValidDate(sportBracket?.left?.perempat);
+    let perempatRight = getFirstValidDate(sportBracket?.right?.perempat);
+    perempatDate = perempatLeft !== 'TBA' ? perempatLeft : perempatRight;
+    
+    // Ambil tanggal semi final
+    let semiLeft = getFirstValidDate(sportBracket?.left?.semifinal);
+    let semiRight = getFirstValidDate(sportBracket?.right?.semifinal);
+    semiDate = semiLeft !== 'TBA' ? semiLeft : semiRight;
+    
+    // Ambil tanggal final dan third place
+    if (sportBracket?.final?.date && sportBracket.final.date !== 'TBA') {
+        finalDate = sportBracket.final.date;
+    }
+    if (sportBracket?.thirdPlace?.date && sportBracket.thirdPlace.date !== 'TBA') {
+        thirdDate = sportBracket.thirdPlace.date;
+    }
+    
+    console.log('📅 Dates:', { penyisihanDate, perempatDate, semiDate, finalDate, thirdDate });
+    
+    // ========== FUNGSI UNTUK MENGUMPULKAN SEMUA MATCH ==========
+    const allMatches = [];
+    
+    // 1. Penyisihan (Left + Right)
+    if (sportBracket?.left?.penyisihan) {
+        sportBracket.left.penyisihan.forEach(m => {
+            if (m.team1 && m.team2 && m.team1 !== 'BY' && m.team2 !== 'BY') {
+                allMatches.push({ ...m, round: 'Penyisihan' });
+            }
+        });
+    }
+    if (sportBracket?.right?.penyisihan) {
+        sportBracket.right.penyisihan.forEach(m => {
+            if (m.team1 && m.team2 && m.team1 !== 'BY' && m.team2 !== 'BY') {
+                allMatches.push({ ...m, round: 'Penyisihan' });
+            }
+        });
+    }
+    
+    // 2. Perempat Final (Left + Right)
+    if (sportBracket?.left?.perempat) {
+        sportBracket.left.perempat.forEach(m => {
+            if (m.team1 && m.team2) {
+                allMatches.push({ ...m, round: 'Perempat Final' });
+            }
+        });
+    }
+    if (sportBracket?.right?.perempat) {
+        sportBracket.right.perempat.forEach(m => {
+            if (m.team1 && m.team2) {
+                allMatches.push({ ...m, round: 'Perempat Final' });
+            }
+        });
+    }
+    
+    // 3. Semi Final (Left + Right)
+    if (sportBracket?.left?.semifinal) {
+        sportBracket.left.semifinal.forEach(m => {
+            if (m.team1 && m.team2) {
+                allMatches.push({ ...m, round: 'Semi Final' });
+            }
+        });
+    }
+    if (sportBracket?.right?.semifinal) {
+        sportBracket.right.semifinal.forEach(m => {
+            if (m.team1 && m.team2) {
+                allMatches.push({ ...m, round: 'Semi Final' });
+            }
+        });
+    }
+    
+    // 4. Final
+    if (sportBracket?.final && sportBracket.final.team1 && sportBracket.final.team2) {
+        allMatches.push({ 
+            ...sportBracket.final, 
+            round: 'Final'
+        });
+    }
+    
+    // 5. Perebutan Juara 3
+    if (sportBracket?.thirdPlace && sportBracket.thirdPlace.team1 && sportBracket.thirdPlace.team2) {
+        allMatches.push({ 
+            ...sportBracket.thirdPlace, 
+            round: 'Perebutan Juara 3'
+        });
+    }
+    
+    // ========== FUNGSI UNTUK MENGURUTKAN MATCH ==========
+    const parseDate = (dateStr) => {
+        if (!dateStr || dateStr === 'TBA') return new Date(9999, 11, 31);
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        return new Date(dateStr);
+    };
+    
+    const sortByDate = (matches) => {
+        if (!matches || matches.length === 0) return [];
+        return [...matches].sort((a, b) => {
+            const dateA = parseDate(a.date);
+            const dateB = parseDate(b.date);
+            if (dateA === dateB) {
+                const timeA = a.time || '00:00';
+                const timeB = b.time || '00:00';
+                return timeA.localeCompare(timeB);
+            }
+            return dateA - dateB;
+        });
+    };
+    
+    const sortedMatches = sortByDate(allMatches);
+    console.log('📅 Sorted Matches:', sortedMatches);
+    
+    // ========== GENERATE HTML JADWAL PERTANDINGAN ==========
+    let matchesHtml = '<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mt-6">';
+    matchesHtml += '<div class="flex justify-between items-center mb-4">';
+    matchesHtml += '<h3 class="text-xl font-black text-red-700 dark:text-red-400 flex items-center gap-2"><i class="fas fa-calendar-alt"></i>Jadwal Pertandingan</h3>';
+    matchesHtml += '<span class="text-xs bg-gray-100 px-2 py-1 rounded">Urut berdasarkan tanggal</span>';
+    matchesHtml += '</div>';
+    
+    if (sortedMatches.length > 0) {
+        const groupedByDate = {};
+        sortedMatches.forEach(match => {
+            const dateKey = match.date || 'TBA';
+            if (!groupedByDate[dateKey]) {
+                groupedByDate[dateKey] = [];
+            }
+            groupedByDate[dateKey].push(match);
+        });
+        
+        const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
+            return parseDate(a) - parseDate(b);
+        });
+        
+        sortedDates.forEach(date => {
+            const matchesOnDate = groupedByDate[date];
+            const displayDate = date === 'TBA' ? 'Jadwal Menyusul' : formatDisplayDateWithDay(date);
+            
+            matchesHtml += `
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-1 h-6 bg-red-600 rounded-full"></div>
+                        <h4 class="font-bold text-md">📅 ${displayDate}</h4>
+                        <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full">${matchesOnDate.length} pertandingan</span>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-3">
+            `;
+            
+            matchesOnDate.forEach(match => {
+                let roundBadge = '';
+                if (match.round === 'Penyisihan') roundBadge = '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Babak Penyisihan</span>';
+                else if (match.round === 'Perempat Final') roundBadge = '<span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Perempat Final</span>';
+                else if (match.round === 'Semi Final') roundBadge = '<span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">Semi Final</span>';
+                else if (match.round === 'Final') roundBadge = '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">🏆 Final</span>';
+                else if (match.round === 'Perebutan Juara 3') roundBadge = '<span class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">🥉 Perebutan Juara 3</span>';
+                
+                matchesHtml += `
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 hover:shadow-md transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex gap-2 flex-wrap">
+                                ${roundBadge}
+                                <span class="text-xs text-gray-500"><i class="far fa-clock mr-1"></i>${match.time || 'TBA'} WIB</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-center flex-1">
+                                <div class="font-bold text-sm">${match.team1 || '__________'}</div>
+                                <div class="text-xl font-bold ${match.score1 !== '-' ? 'text-red-600' : 'text-gray-400'}">${match.score1 !== '-' ? match.score1 : '-'}</div>
+                            </div>
+                            <div class="text-gray-400 font-bold px-2">VS</div>
+                            <div class="text-center flex-1">
+                                <div class="font-bold text-sm">${match.team2 || '__________'}</div>
+                                <div class="text-xl font-bold ${match.score2 !== '-' ? 'text-red-600' : 'text-gray-400'}">${match.score2 !== '-' ? match.score2 : '-'}</div>
+                            </div>
+                        </div>
+                        ${match.winner ? `<div class="text-center text-xs text-green-600 mt-2">✅ Pemenang: ${match.winner}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            matchesHtml += `
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        matchesHtml += '<div class="text-center py-8 text-gray-500">Belum ada data pertandingan untuk cabang ini</div>';
+    }
+    
+    matchesHtml += '</div>';
+    
+    // ========== RENDER HTML ==========
     document.getElementById('sportDetailContent').innerHTML = `
         <div class="bg-gradient-to-r ${sport.color} rounded-2xl p-8 text-white mb-6">
             <h2 class="text-4xl font-black mb-2">
@@ -1777,59 +2017,95 @@ function renderSports() {
         <div class="grid md:grid-cols-2 gap-6">
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6">
                 <h3 class="text-xl font-black mb-4 text-red-700 dark:text-red-400 flex items-center gap-2">
-                    <i class="fas fa-calendar"></i>Jadwal
+                    <i class="fas fa-calendar"></i>Ringkasan Jadwal
                 </h3>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <span>Babak Penyisihan</span>
-                        <span class="font-bold">${sport.schedule.penyisihan || '-'}</span>
+                        <span class="font-bold">${formatDisplayDateWithDay(penyisihanDate)}</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <span>Perempat Final</span>
-                        <span class="font-bold">${sport.schedule.perempatFinal || '-'}</span>
+                        <span class="font-bold">${formatDisplayDateWithDay(perempatDate)}</span>
                     </div>
                     <div class="flex justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
                         <span>Semi Final</span>
-                        <span class="font-bold">${sport.schedule.semiFinal || '-'}</span>
+                        <span class="font-bold">${formatDisplayDateWithDay(semiDate)}</span>
                     </div>
                     <div class="flex justify-between p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded">
-                        <span class="font-bold">Final</span>
-                        <span class="font-black">${sport.schedule.final || '-'}</span>
+                        <span class="font-bold">Final & Juara 3</span>
+                        <span class="font-black">${formatDisplayDateWithDay(finalDate)}</span>
                     </div>
                 </div>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6">
                 <h3 class="text-xl font-black mb-4 text-red-700 dark:text-red-400 flex items-center gap-2">
-                    <i class="fas fa-trophy"></i>Juara
+                    <i class="fas fa-trophy"></i>Peraih Medali
                 </h3>
                 <div class="space-y-3">
                     <div class="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
                         <div class="text-3xl">🥇</div>
                         <div>
-                            <div class="font-bold">${sport.winners.juara1 || 'Belum ditentukan'}</div>
+                            <div class="font-bold">${sportBracket?.final?.winner || 'Belum ditentukan'}</div>
                             <div class="text-xs text-gray-500">Juara 1</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border-l-4 border-gray-400">
                         <div class="text-3xl">🥈</div>
                         <div>
-                            <div class="font-bold">${sport.winners.juara2 || 'Belum ditentukan'}</div>
+                            <div class="font-bold">${sportBracket?.final?.loser || 'Belum ditentukan'}</div>
                             <div class="text-xs text-gray-500">Juara 2</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-500">
                         <div class="text-3xl">🥉</div>
                         <div>
-                            <div class="font-bold">${sport.winners.juara3 || 'Belum ditentukan'}</div>
+                            <div class="font-bold">${sportBracket?.thirdPlace?.winner || 'Belum ditentukan'}</div>
                             <div class="text-xs text-gray-500">Juara 3</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        ${matchesHtml}
     `;
-  
+    
     window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// Helper function format tanggal dengan hari
+function formatDisplayDateWithDay(dateStr) {
+    if (!dateStr || dateStr === 'TBA') return 'Jadwal Menyusul';
+    
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const year = parseInt(parts[2]);
+            const date = new Date(year, month - 1, day);
+            const dayName = days[date.getDay()];
+            return `${dayName}, ${day} ${months[month - 1]} ${year}`;
+        }
+    }
+    
+    if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const day = parseInt(parts[2]);
+            const date = new Date(year, month - 1, day);
+            const dayName = days[date.getDay()];
+            const monthName = months[month - 1];
+            return `${dayName}, ${day} ${monthName} ${year}`;
+        }
+    }
+    
+    return dateStr;
 }
 
 function backToSports() {
@@ -2425,8 +2701,8 @@ function displayParticipants() {
                             <th class="px-4 py-2">Nama Peserta</th>
                             <th class="px-4 py-2">RT</th>
                             <th class="px-4 py-2">Olahraga</th>
+                            <th class="px-4 py-2">No HP</th>
                             <th class="px-4 py-2">Status</th>
-                            <th class="px-4 py-2">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3165,30 +3441,333 @@ function exportParticipantsToCSV() {
 // ============================
 // SCHEDULE
 // ============================
-function renderSchedule() {
-    const typeColors = { meeting:'bg-blue-500', opening:'bg-red-500', sport:'bg-green-500', ceremony:'bg-yellow-500', peak:'bg-purple-500' };
-    document.getElementById('scheduleTimeline').innerHTML = SCHEDULES.map(s => `
-        <div class="relative pl-6">
-            <div class="absolute -left-3 top-0 w-6 h-6 ${typeColors[s.type]} rounded-full border-4 border-white dark:border-gray-900"></div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 hover:shadow-lg transition">
-                <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 ${typeColors[s.type]} rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                        <i class="fas ${s.icon}"></i>
+async function renderSchedule() {
+    try {
+        // Ambil semua match dari bracket
+        const brackets = await getBracketData();
+        const allMatches = [];
+        
+        // Nama cabang olahraga
+        const sportNames = {
+            futsal: 'Futsal', basket: 'Basket', voli: 'Voli',
+            badminton: 'Badminton', catur: 'Catur', esport: 'Esport', tenismeja: 'Tenis Meja'
+        };
+        
+        // Helper function untuk mengecek apakah match valid (bukan BY)
+        const isValidMatch = (match) => {
+            if (!match) return false;
+            // Skip jika team1 atau team2 adalah 'BY'
+            if (match.team1 === 'BY' || match.team2 === 'BY') return false;
+            // Skip jika kedua team kosong
+            if (!match.team1 && !match.team2) return false;
+            return true;
+        };
+        
+        // Kumpulkan semua match dari semua cabang
+        for (let sportId in brackets) {
+            const sport = brackets[sportId];
+            if (!sport) continue;
+            
+            const sportName = sportNames[sportId] || sportId;
+            
+            // Helper function untuk menambahkan match (hanya jika valid)
+            const addMatch = (match, roundName) => {
+                if (!isValidMatch(match)) return;
+                
+                // Cek apakah pertandingan selesai
+                const isCompleted = match.done || (match.score1 && match.score1 !== '-' && match.score2 && match.score2 !== '-');
+                const hasScore = match.score1 && match.score1 !== '-' && match.score2 && match.score2 !== '-';
+                
+                allMatches.push({
+                    id: match.id,
+                    title: `${sportName} - ${roundName}`,
+                    date: match.date,
+                    time: match.time,
+                    loc: roundName === 'FINAL' ? 'Lapangan Utama RW XI' : 'Lapangan RW XI',
+                    type: roundName === 'FINAL' ? 'peak' : 'sport',
+                    icon: getSportIcon(sportId),
+                    team1: match.team1 || '_____',
+                    team2: match.team2 || '_____',
+                    score1: match.score1 !== '-' ? match.score1 : null,
+                    score2: match.score2 !== '-' ? match.score2 : null,
+                    winner: match.winner,
+                    isCompleted: isCompleted,
+                    hasScore: hasScore,
+                    round: roundName,
+                    sportId: sportId
+                });
+            };
+            
+            // Kumpulkan match dari left bracket
+            if (sport.left) {
+                if (sport.left.penyisihan) {
+                    sport.left.penyisihan.forEach(m => addMatch(m, 'Penyisihan'));
+                }
+                if (sport.left.perempat) {
+                    sport.left.perempat.forEach(m => addMatch(m, 'Perempat Final'));
+                }
+                if (sport.left.semifinal) {
+                    sport.left.semifinal.forEach(m => addMatch(m, 'Semi Final'));
+                }
+            }
+            
+            // Kumpulkan match dari right bracket
+            if (sport.right) {
+                if (sport.right.penyisihan) {
+                    sport.right.penyisihan.forEach(m => addMatch(m, 'Penyisihan'));
+                }
+                if (sport.right.perempat) {
+                    sport.right.perempat.forEach(m => addMatch(m, 'Perempat Final'));
+                }
+                if (sport.right.semifinal) {
+                    sport.right.semifinal.forEach(m => addMatch(m, 'Semi Final'));
+                }
+            }
+            
+            // Final
+            if (sport.final) {
+                addMatch(sport.final, 'FINAL');
+            }
+            
+            // Perebutan Juara 3
+            if (sport.thirdPlace) {
+                addMatch(sport.thirdPlace, 'Perebutan Juara 3');
+            }
+        }
+        
+        // Filter match yang memiliki tanggal valid dan skip BY
+        let validMatches = allMatches.filter(m => {
+            // Harus punya tanggal valid
+            if (!m.date || m.date === 'TBA') return false;
+            // Pastikan bukan BY (sudah dihandle di isValidMatch, tapi double check)
+            if (m.team1 === 'BY' || m.team2 === 'BY') return false;
+            return true;
+        });
+        
+        // Urutkan berdasarkan tanggal dan waktu
+        validMatches.sort((a, b) => {
+            const dateA = parseDateTime(a.date, a.time);
+            const dateB = parseDateTime(b.date, b.time);
+            return dateA - dateB;
+        });
+        
+        // Kelompokkan berdasarkan tanggal
+        const groupedByDate = {};
+        validMatches.forEach(match => {
+            const dateKey = match.date;
+            if (!groupedByDate[dateKey]) {
+                groupedByDate[dateKey] = [];
+            }
+            groupedByDate[dateKey].push(match);
+        });
+        
+        // Urutkan match dalam setiap tanggal berdasarkan waktu
+        for (let date in groupedByDate) {
+            groupedByDate[date].sort((a, b) => {
+                const timeA = a.time || '00:00';
+                const timeB = b.time || '00:00';
+                return timeA.localeCompare(timeB);
+            });
+        }
+        
+        // Generate HTML
+        if (validMatches.length === 0) {
+            document.getElementById('scheduleTimeline').innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-calendar-alt text-4xl mb-2 opacity-50"></i>
+                    <p>Belum ada jadwal pertandingan</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        for (let date in groupedByDate) {
+            const matches = groupedByDate[date];
+            html += `
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3 sticky top-0 bg-gray-50 dark:bg-gray-900 py-2 rounded-lg">
+                        <div class="w-1 h-6 bg-red-600 rounded-full"></div>
+                        <h3 class="font-bold text-lg">📅 ${formatDisplayDateWithDay(date)}</h3>
+                        <span class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">${matches.length} pertandingan</span>
                     </div>
-                    <div class="flex-1">
-                        <h3 class="font-bold text-base">${s.title}</h3>
-                        <div class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 mt-1">
-                            <span><i class="far fa-calendar mr-1"></i>${s.date}</span>
-                            <span><i class="far fa-clock mr-1"></i>${s.time}</span>
-                            <span><i class="fas fa-map-marker-alt mr-1"></i>${s.loc}</span>
+                    <div class="space-y-3">
+            `;
+            
+            matches.forEach(m => {
+                const typeColors = { 
+                    meeting: 'bg-blue-500', 
+                    opening: 'bg-red-500', 
+                    sport: 'bg-green-500', 
+                    ceremony: 'bg-yellow-500', 
+                    peak: 'bg-purple-500' 
+                };
+                const typeColor = typeColors[m.type] || 'bg-green-500';
+                
+                // Status badge
+                let statusBadge = '';
+                if (m.isCompleted) {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                        <i class="fas fa-check-circle mr-1"></i>Selesai
+                    </span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+                        <i class="fas fa-clock mr-1"></i>Belum Mulai
+                    </span>`;
+                }
+                
+                // Score display
+                let scoreDisplay = '';
+                if (m.hasScore) {
+                    const winnerClass1 = m.winner === m.team1 ? 'text-green-600 font-bold' : '';
+                    const winnerClass2 = m.winner === m.team2 ? 'text-green-600 font-bold' : '';
+                    scoreDisplay = `
+                        <div class="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                            <div class="text-center">
+                                <span class="font-semibold ${winnerClass1}">${m.team1}</span>
+                            </div>
+                            <div class="text-xl font-black text-red-600">
+                                ${m.score1} - ${m.score2}
+                            </div>
+                            <div class="text-center">
+                                <span class="font-semibold ${winnerClass2}">${m.team2}</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (m.isCompleted) {
+                    scoreDisplay = `
+                        <div class="text-center mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500">
+                            Pertandingan selesai
+                        </div>
+                    `;
+                }
+                
+                html += `
+                    <div class="relative pl-6">
+                        <div class="absolute -left-3 top-3 w-6 h-6 ${typeColor} rounded-full border-4 border-white dark:border-gray-900"></div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 hover:shadow-lg transition">
+                            <div class="flex flex-wrap items-start gap-3">
+                                <div class="w-12 h-12 ${typeColor} rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                                    <i class="fas ${m.icon || 'fa-futbol'} text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <h3 class="font-bold text-base">${m.title}</h3>
+                                        ${statusBadge}
+                                    </div>
+                                    <div class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                        <span><i class="far fa-clock mr-1"></i>${m.time || 'TBA'} WIB</span>
+                                        <span><i class="fas fa-map-marker-alt mr-1"></i>${m.loc}</span>
+                                    </div>
+                                    ${scoreDisplay}
+                                    ${!m.hasScore && !m.isCompleted ? `
+                                        <div class="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                            <div class="text-center flex-1">
+                                                <span class="font-medium">${m.team1}</span>
+                                            </div>
+                                            <div class="text-sm text-gray-400">vs</div>
+                                            <div class="text-center flex-1">
+                                                <span class="font-medium">${m.team2}</span>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
                         </div>
                     </div>
+                `;
+            });
+            
+            html += `
+                    </div>
                 </div>
+            `;
+        }
+
+        // Helper function untuk parse date + time
+function parseDateTime(dateStr, timeStr) {
+    // Parse date (format: DD/MM/YYYY atau YYYY-MM-DD)
+    let year, month, day;
+    
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        day = parseInt(parts[0]);
+        month = parseInt(parts[1]) - 1;
+        year = parseInt(parts[2]);
+    } else if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        year = parseInt(parts[0]);
+        month = parseInt(parts[1]) - 1;
+        day = parseInt(parts[2]);
+    } else {
+        return 0;
+    }
+    
+    // Parse time (format: HH:MM)
+    let hour = 0, minute = 0;
+    if (timeStr && timeStr !== 'TBA') {
+        const timeParts = timeStr.split(':');
+        hour = parseInt(timeParts[0]);
+        minute = parseInt(timeParts[1]);
+    }
+    
+    return new Date(year, month, day, hour, minute).getTime();
+}
+        
+        document.getElementById('scheduleTimeline').innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error renderSchedule:', error);
+        document.getElementById('scheduleTimeline').innerHTML = `
+            <div class="text-center py-8 text-red-500">
+                <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+                <p>Gagal memuat jadwal</p>
             </div>
-        </div>
-    `).join('');
+        `;
+    }
 }
 
+// Helper function
+function getSportIcon(sportId) {
+    const icons = {
+        futsal: 'fa-futbol',
+        basket: 'fa-basketball-ball',
+        voli: 'fa-volleyball-ball',
+        badminton: 'fa-shuttlecock',
+        catur: 'fa-chess',
+        esport: 'fa-gamepad',
+        tenismeja: 'fa-table-tennis'
+    };
+    return icons[sportId] || 'fa-trophy';
+}
+
+function parseDate(dateStr) {
+    if (!dateStr || dateStr === 'TBA') return new Date(9999, 11, 31);
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(dateStr);
+}
+// Format dengan hari: "Minggu, 14 Juni 2026"
+function formatDisplayDateWithDay(dateStr) {
+    if (!dateStr || dateStr === 'TBA') return 'Jadwal Menyusul';
+    
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const year = parts[2];
+            const date = new Date(year, month - 1, day);
+            const dayName = days[date.getDay()];
+            const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            return `${dayName}, ${day} ${bulan[month - 1]} ${year}`;
+        }
+    }
+}
 // ============================
 // BRACKET
 // ============================
@@ -3196,71 +3775,10 @@ let currentBracket = 'futsal';
 let editMode = false;
 
 // ======================== DATA BRACKET PER CABANG OLAHRAGA ========================
-function getDefaultBracket() {
-    return {
-        left: {
-            penyisihan: [
-                { id: 'L1', team1: 'RT 1', team2: 'BY', score1: '-', score2: '-', winner: null, done: false, date: '07/06/2026', time: '08:00' },
-                { id: 'L2', team1: 'RT 2', team2: 'RT 3', score1: '-', score2: '-', winner: null, done: false, date: '07/06/2026', time: '09:00' },
-                { id: 'L3', team1: 'RT 4', team2: 'RT 5', score1: '-', score2: '-', winner: null, done: false, date: '08/06/2026', time: '08:00' },
-                { id: 'L4', team1: 'RT 6', team2: 'RT 7', score1: '-', score2: '-', winner: null, done: false, date: '08/06/2026', time: '09:00' }
-            ],
-            perempat: [
-                { id: 'LQF1', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '14/06/2026', time: '10:00' },
-                { id: 'LQF2', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '14/06/2026', time: '11:00' }
-            ],
-            semifinal: [
-                { id: 'LSF1', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '21/06/2026', time: '13:00' }
-            ]
-        },
-        right: {
-            penyisihan: [
-                { id: 'R1', team1: 'RT 8', team2: 'RT 9', score1: '-', score2: '-', winner: null, done: false, date: '09/06/2026', time: '08:00' },
-                { id: 'R2', team1: 'RT 10', team2: 'RT 11', score1: '-', score2: '-', winner: null, done: false, date: '09/06/2026', time: '09:00' },
-                { id: 'R3', team1: 'RT 12', team2: 'RT 13', score1: '-', score2: '-', winner: null, done: false, date: '10/06/2026', time: '08:00' },
-                { id: 'R4', team1: 'RT 14', team2: 'BY', score1: '-', score2: '-', winner: null, done: false, date: '10/06/2026', time: '09:00' }
-            ],
-            perempat: [
-                { id: 'RQF1', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '15/06/2026', time: '10:00' },
-                { id: 'RQF2', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '15/06/2026', time: '11:00' }
-            ],
-            semifinal: [
-                { id: 'RSF1', team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false, date: '22/06/2026', time: '13:00' }
-            ]
-        },
-        final: {
-            id: 'FINAL',
-            team1: null,
-            team2: null,
-            score1: '-',
-            score2: '-',
-            winner: null,
-            done: false,
-            date: '28/06/2026',
-            time: '15:00'
-        },
-        // TAMBAHKAN INI - Perebutan Juara 3
-        thirdPlace: {
-            id: 'THIRD',
-            team1: null,
-            team2: null,
-            score1: '-',
-            score2: '-',
-            winner: null,
-            done: false,
-            date: '28/06/2026',
-            time: '13:00'
-        }
-    };
-}
 
 // Simpan semua data bracket per cabang olahraga
 let allBrackets = {};
 
-// Inisialisasi bracket untuk semua cabang olahraga
-SPORTS.forEach(sport => {
-    allBrackets[sport.id] = getDefaultBracket();
-});
 
 // Data utama yang sedang aktif
 let mainBracket = allBrackets[currentBracket];
@@ -3648,95 +4166,412 @@ async function renderBracket() {
     console.log('🎯 Rendering bracket...');
     
     try {
-        // Ambil data bracket terbaru
+        // Ambil data bracket terbaru dari API
         const brackets = await getBracketData();
         
+        // Jika ada data untuk cabang yang dipilih, gunakan, jika tidak buat default kosong
         if (brackets && brackets[currentBracket]) {
-            mainBracket = brackets[currentBracket];
-        } else {
+            const rawData = brackets[currentBracket];
+            
+            // PISAHKAN DATA: Ambil THIRD dari penyisihan jika ada
+            let penyisihanLeft = rawData.left?.penyisihan || [];
+            let penyisihanRight = rawData.right?.penyisihan || [];
+            let finalMatch = rawData.final || null;
+            let thirdMatch = rawData.thirdPlace || null;
+            
+            // Cari dan pindahkan THIRD dari array penyisihan ke thirdPlace
+            if (penyisihanLeft && penyisihanLeft.length > 0) {
+                const thirdIndex = penyisihanLeft.findIndex(m => m.id === 'THIRD' || m.id === 'third' || m.roundName === 'THIRD');
+                if (thirdIndex !== -1) {
+                    thirdMatch = penyisihanLeft[thirdIndex];
+                    penyisihanLeft.splice(thirdIndex, 1);
+                }
+            }
+            
+            if (penyisihanRight && penyisihanRight.length > 0) {
+                const thirdIndex = penyisihanRight.findIndex(m => m.id === 'THIRD' || m.id === 'third' || m.roundName === 'THIRD');
+                if (thirdIndex !== -1) {
+                    thirdMatch = penyisihanRight[thirdIndex];
+                    penyisihanRight.splice(thirdIndex, 1);
+                }
+            }
+            
+            // Cari dan pindahkan FINAL dari array jika ada
+            if (penyisihanLeft && penyisihanLeft.length > 0) {
+                const finalIndex = penyisihanLeft.findIndex(m => m.id === 'FINAL' || m.id === 'final');
+                if (finalIndex !== -1) {
+                    finalMatch = penyisihanLeft[finalIndex];
+                    penyisihanLeft.splice(finalIndex, 1);
+                }
+            }
+            
+            if (penyisihanRight && penyisihanRight.length > 0) {
+                const finalIndex = penyisihanRight.findIndex(m => m.id === 'FINAL' || m.id === 'final');
+                if (finalIndex !== -1) {
+                    finalMatch = penyisihanRight[finalIndex];
+                    penyisihanRight.splice(finalIndex, 1);
+                }
+            }
+            
             mainBracket = {
-                left: { penyisihan: [], perempat: [], semifinal: [] },
-                right: { penyisihan: [], perempat: [], semifinal: [] },
-                final: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false },
-                thirdPlace: { team1: null, team2: null, score1: '-', score2: '-', winner: null, done: false }
+                left: {
+                    penyisihan: penyisihanLeft || [],
+                    perempat: rawData.left?.perempat || [],
+                    semifinal: rawData.left?.semifinal || []
+                },
+                right: {
+                    penyisihan: penyisihanRight || [],
+                    perempat: rawData.right?.perempat || [],
+                    semifinal: rawData.right?.semifinal || []
+                },
+                final: finalMatch || { 
+                    id: 'FINAL',
+                    team1: null, 
+                    team2: null, 
+                    score1: '-', 
+                    score2: '-', 
+                    winner: null, 
+                    done: false,
+                    date: '',
+                    time: ''
+                },
+                thirdPlace: thirdMatch || { 
+                    id: 'THIRD',
+                    team1: null, 
+                    team2: null, 
+                    score1: '-', 
+                    score2: '-', 
+                    winner: null, 
+                    done: false,
+                    date: '',
+                    time: ''
+                }
+            };
+        } else {
+            // Buat struktur default kosong
+            mainBracket = {
+                left: { 
+                    penyisihan: [], 
+                    perempat: [], 
+                    semifinal: [] 
+                },
+                right: { 
+                    penyisihan: [], 
+                    perempat: [], 
+                    semifinal: [] 
+                },
+                final: { 
+                    id: 'FINAL',
+                    team1: null, 
+                    team2: null, 
+                    score1: '-', 
+                    score2: '-', 
+                    winner: null, 
+                    done: false,
+                    date: '',
+                    time: ''
+                },
+                thirdPlace: { 
+                    id: 'THIRD',
+                    team1: null, 
+                    team2: null, 
+                    score1: '-', 
+                    score2: '-', 
+                    winner: null, 
+                    done: false,
+                    date: '',
+                    time: ''
+                }
             };
         }
         
-        // Log untuk debugging
-        console.log(`Bracket data for ${currentBracket}:`, mainBracket);
+        console.log('Processed mainBracket:', mainBracket);
         
-        const leftRounds = [
-            { title: 'PENYISIHAN', matches: mainBracket.left?.penyisihan || [] },
-            { title: 'PEREMPAT FINAL', matches: mainBracket.left?.perempat || [] },
-            { title: 'SEMI FINAL', matches: mainBracket.left?.semifinal || [] }
-        ];
-        
-        const rightRounds = [
-            { title: 'SEMI FINAL', matches: mainBracket.right?.semifinal || [] },
-            { title: 'PEREMPAT FINAL', matches: mainBracket.right?.perempat || [] },
-            { title: 'PENYISIHAN', matches: mainBracket.right?.penyisihan || [] }
-        ];
-        
-        // Render HTML
-        let leftHtml = '<div class="bracket-side">';
-        for (const round of leftRounds) {
-            leftHtml += `<div class="round"><div class="round-title">${round.title}</div>`;
-            if (round.matches && round.matches.length > 0) {
-                round.matches.forEach((match, idx) => {
-                    const spacing = round.title === 'PENYISIHAN' ? 40 : (round.title === 'PEREMPAT FINAL' ? 20 : 15);
-                    leftHtml += `<div class="match" style="margin-bottom: ${idx < round.matches.length - 1 ? spacing : 0}px">`;
-                    leftHtml += renderMatchCard(match);
-                    leftHtml += `</div>`;
-                });
-            } else {
-                leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        // Fungsi render match card
+        function renderMatchCard(match, isFinal = false) {
+            if (!match) return '<div class="match-card"><div class="team"><span class="team-name">__________</span><span class="team-score">-</span></div><div class="team"><span class="team-name">__________</span><span class="team-score">-</span></div></div>';
+            
+            const dateDisplay = match.date || 'TBA';
+            const timeDisplay = match.time || 'TBA';
+            const finalClass = isFinal ? 'final-match-card' : '';
+            
+            // Handle BYE
+            const team1Display = match.team1 === 'BY' ? 'BYE' : (match.team1 || '__________');
+            const team2Display = match.team2 === 'BY' ? 'BYE' : (match.team2 || '__________');
+            
+            // Jika match kosong
+            if (!match.team1 && !match.team2) {
+                return `
+                    <div class="match-card ${finalClass}">
+                        <div class="text-xs text-center bg-gray-100 dark:bg-gray-800 py-1 text-gray-500 rounded-t-lg">
+                            <i class="fas fa-calendar-alt mr-1"></i>${dateDisplay} | <i class="fas fa-clock mr-1"></i>${timeDisplay}
+                        </div>
+                        <div class="team">
+                            <span class="team-name">__________</span>
+                            <span class="team-score">-</span>
+                        </div>
+                        <div class="team">
+                            <span class="team-name">__________</span>
+                            <span class="team-score">-</span>
+                        </div>
+                    </div>
+                `;
             }
-            leftHtml += `</div>`;
+            
+            // Cek pemenang
+            const isTeam1Winner = match.winner === match.team1;
+            const isTeam2Winner = match.winner === match.team2;
+            
+            return `
+                <div class="match-card ${finalClass}" onclick="openMatchDetailModal('${match.id}')" style="cursor: pointer;">
+                    <div class="text-xs text-center bg-gray-100 dark:bg-gray-800 py-1 text-gray-500 rounded-t-lg">
+                        <i class="fas fa-calendar-alt mr-1"></i>${dateDisplay} | <i class="fas fa-clock mr-1"></i>${timeDisplay}
+                    </div>
+                    <div class="team ${isTeam1Winner ? 'winner' : ''}">
+                        <span class="team-name">${team1Display}</span>
+                        <span class="team-score">${match.score1 || '-'}</span>
+                    </div>
+                    <div class="team ${isTeam2Winner ? 'winner' : ''}">
+                        <span class="team-name">${team2Display}</span>
+                        <span class="team-score">${match.score2 || '-'}</span>
+                    </div>
+                    ${match.winner ? `<div class="text-center text-xs text-green-600 py-1">🏆 ${match.winner}</div>` : ''}
+                </div>
+            `;
         }
-        leftHtml += `</div>`;
         
-        const middleHtml = `
-            <div class="final-container">
-                <div class="round-title" style="background: #eab308;">🏆 FINAL 🏆</div>
-                <div class="match">${renderMatchCard(mainBracket.final || {})}</div>
-                <div class="round-title mt-4" style="background: #6b7280;">🥉 PEREBUTAN JUARA 3 🥉</div>
-                <div class="match">${renderMatchCard(mainBracket.thirdPlace || {})}</div>
+        // ============ SISI KIRI ============
+        const leftMatches = mainBracket.left;
+        
+        let leftHtml = `
+            <div class="bracket-side">
+                <div class="round">
+                    <div class="round-title">PENYISIHAN</div>
+                    <div class="matches">
+        `;
+        
+        // Penyisihan kiri (match-matching)
+        if (leftMatches.penyisihan && leftMatches.penyisihan.length > 0) {
+            leftMatches.penyisihan.forEach((match, idx) => {
+                leftHtml += `<div class="match-item">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        }
+        
+        leftHtml += `
+                    </div>
+                </div>
+                <div class="round-connector">↓</div>
+                <div class="round">
+                    <div class="round-title">PEREMPAT FINAL</div>
+                    <div class="matches">
+        `;
+        
+        // Perempat final kiri
+        if (leftMatches.perempat && leftMatches.perempat.length > 0) {
+            leftMatches.perempat.forEach((match, idx) => {
+                const marginTop = idx > 0 ? '40px' : '0';
+                leftHtml += `<div class="match-item" style="margin-top: ${marginTop}">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        }
+        
+        leftHtml += `
+                    </div>
+                </div>
+                <div class="round-connector">↓</div>
+                <div class="round">
+                    <div class="round-title">SEMI FINAL</div>
+                    <div class="matches">
+        `;
+        
+        // Semi final kiri
+        if (leftMatches.semifinal && leftMatches.semifinal.length > 0) {
+            leftMatches.semifinal.forEach((match) => {
+                leftHtml += `<div class="match-item">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            leftHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        }
+        
+        leftHtml += `
+                    </div>
+                </div>
             </div>
         `;
         
-        let rightHtml = '<div class="bracket-side">';
-        for (const round of rightRounds) {
-            rightHtml += `<div class="round"><div class="round-title">${round.title}</div>`;
-            if (round.matches && round.matches.length > 0) {
-                round.matches.forEach((match, idx) => {
-                    const spacing = round.title === 'PENYISIHAN' ? 40 : (round.title === 'PEREMPAT FINAL' ? 20 : 15);
-                    rightHtml += `<div class="match" style="margin-bottom: ${idx < round.matches.length - 1 ? spacing : 0}px">`;
-                    rightHtml += renderMatchCard(match);
-                    rightHtml += `</div>`;
-                });
-            } else {
-                rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
-            }
-            rightHtml += `</div>`;
+        // ============ SISI KANAN ============
+        const rightMatches = mainBracket.right;
+        
+        let rightHtml = `
+            <div class="bracket-side">
+                <div class="round">
+                    <div class="round-title">SEMI FINAL</div>
+                    <div class="matches">
+        `;
+        
+        // Semi final kanan
+        if (rightMatches.semifinal && rightMatches.semifinal.length > 0) {
+            rightMatches.semifinal.forEach((match) => {
+                rightHtml += `<div class="match-item">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
         }
-        rightHtml += `</div>`;
+        
+        rightHtml += `
+                    </div>
+                </div>
+                <div class="round-connector">↑</div>
+                <div class="round">
+                    <div class="round-title">PEREMPAT FINAL</div>
+                    <div class="matches">
+        `;
+        
+        // Perempat final kanan
+        if (rightMatches.perempat && rightMatches.perempat.length > 0) {
+            rightMatches.perempat.forEach((match, idx) => {
+                const marginBottom = idx < rightMatches.perempat.length - 1 ? '40px' : '0';
+                rightHtml += `<div class="match-item" style="margin-bottom: ${marginBottom}">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        }
+        
+        rightHtml += `
+                    </div>
+                </div>
+                <div class="round-connector">↑</div>
+                <div class="round">
+                    <div class="round-title">PENYISIHAN</div>
+                    <div class="matches">
+        `;
+        
+        // Penyisihan kanan
+        if (rightMatches.penyisihan && rightMatches.penyisihan.length > 0) {
+            rightMatches.penyisihan.forEach((match, idx) => {
+                const marginBottom = idx < rightMatches.penyisihan.length - 1 ? '20px' : '0';
+                rightHtml += `<div class="match-item" style="margin-bottom: ${marginBottom}">${renderMatchCard(match)}</div>`;
+            });
+        } else {
+            rightHtml += `<div class="text-center text-gray-400 text-sm py-4">Belum ada data</div>`;
+        }
+        
+        rightHtml += `
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // ============ BAGIAN TENGAH (FINAL & JUARA 3) ============
+        const finalMatch = mainBracket.final;
+        const thirdMatch = mainBracket.thirdPlace;
+        
+        const middleHtml = `
+            <div class="center-container">
+                <div class="final-container">
+                    <div class="round-title final-title">
+                        <i class="fas fa-trophy"></i> FINAL <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="match final-match">
+                        ${renderMatchCard(finalMatch, true)}
+                    </div>
+                </div>
+                <div class="third-container">
+                    <div class="round-title third-title">
+                        <i class="fas fa-medal"></i> PEREBUTAN JUARA 3
+                    </div>
+                    <div class="match">
+                        ${renderMatchCard(thirdMatch)}
+                    </div>
+                </div>
+            </div>
+        `;
         
         const sportName = SPORTS_LIST.find(s => s.id === currentBracket)?.name || 'BAGAN';
         
         const fullHtml = `
             <div class="mb-4 flex justify-between items-center flex-wrap gap-3">
-                <h2 class="text-2xl font-black text-red-700">${sportName} - DUA SISI</h2>
-                <button onclick="refreshBracketData()" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm">
-                    <i class="fas fa-sync-alt mr-1"></i> Refresh
-                </button>
+                <h2 class="text-2xl font-black text-red-700">
+                    <i class="fas ${SPORTS_LIST.find(s => s.id === currentBracket)?.icon || 'fa-futbol'} mr-2"></i>
+                    ${sportName} - BRACKET
+                </h2>
+                <div class="flex gap-2">
+                    <button onclick="refreshBracket()" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 transition">
+                        <i class="fas fa-sync-alt mr-1"></i> Refresh
+                    </button>
+                </div>
             </div>
-            <div class="bracket-wrapper" style="overflow-x: auto;">
-                <div class="bracket" style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; min-width: max-content;">
+            <div class="bracket-wrapper" style="overflow-x: auto; padding-bottom: 20px;">
+                <div class="bracket" style="display: flex; justify-content: center; align-items: stretch; gap: 30px; min-width: max-content;">
                     ${leftHtml}
                     ${middleHtml}
                     ${rightHtml}
                 </div>
             </div>
+            <style>
+                .center-container {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    gap: 30px;
+                    min-width: 300px;
+                }
+                .final-title {
+                    background: linear-gradient(135deg, #eab308, #ca8a04);
+                    text-align: center;
+                    font-weight: bold;
+                    padding: 8px 12px;
+                    border-radius: 10px;
+                    margin-bottom: 20px;
+                    flex-shrink: 0; /* Judul tidak ikut flex */
+                }
+                 .final-match, .final-container .match-card, .third-container .match-card {
+                width: 100%;
+                min-width: 280px;
+                max-width: 100%;
+                box-sizing: border-box;
+                }
+                .third-title {
+                    background: #6b7280;
+                    text-align: center;
+                    font-weight: bold;
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin-bottom: 12px;
+                }
+              
+                .winner {
+                    background: linear-gradient(90deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+                    border-left: 3px solid #22c55e;
+                }
+                .match-card {
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                .match-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+                .round-connector {
+                    text-align: center;
+                    font-size: 20px;
+                    color: #dc2626;
+                    margin: 10px 0;
+                }
+                .bracket-side {
+                    min-width: 280px;
+                }
+                .matches {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+                .match-item {
+                    width: 100%;
+                }
+            </style>
         `;
         
         const bracketContent = document.getElementById('bracketContent');
@@ -3744,7 +4579,10 @@ async function renderBracket() {
             bracketContent.innerHTML = fullHtml;
             setTimeout(() => {
                 const wrapper = document.querySelector('.bracket-wrapper');
-                if (wrapper) wrapper.scrollLeft = 0;
+                if (wrapper) {
+                    const center = (wrapper.scrollWidth - wrapper.clientWidth) / 2;
+                    wrapper.scrollLeft = center;
+                }
             }, 100);
         }
         
@@ -3755,35 +4593,6 @@ async function renderBracket() {
             bracketContent.innerHTML = '<div class="text-center text-red-500 py-8">Gagal memuat bagan pertandingan</div>';
         }
     }
-}
-
-// Fungsi refresh manual
-async function refreshBracketData() {
-    console.log('🔄 Refreshing bracket data...');
-    await renderBracket();
-    showToast('✅ Data bagan telah di-refresh', 'success');
-}
-
-// Fungsi renderMatchCard
-function renderMatchCard(match) {
-    if (!match) return '<div class="match-card"><div class="team">__________</div><div class="team">__________</div></div>';
-    
-    return `
-        <div class="match-card">
-            <div class="text-xs text-center bg-gray-100 dark:bg-gray-800 py-1 text-gray-500 rounded-t-lg">
-                <i class="fas fa-calendar-alt mr-1"></i>${match.date || 'TBA'} | <i class="fas fa-clock mr-1"></i>${match.time || '19:00'}
-            </div>
-            <div class="team ${match.winner === match.team1 ? 'winner' : ''}">
-                <span class="team-name">${match.team1 || '__________'}</span>
-                <span class="team-score">${match.score1 || '-'}</span>
-            </div>
-            <div class="team ${match.winner === match.team2 ? 'winner' : ''}">
-                <span class="team-name">${match.team2 || '__________'}</span>
-                <span class="team-score">${match.score2 || '-'}</span>
-            </div>
-            ${match.done ? `<div class="text-center text-xs text-green-600 py-1">🏆 ${match.winner}</div>` : ''}
-        </div>
-    `;
 }
 
 // ======================== INITIALIZE ========================
@@ -3798,6 +4607,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Load pengumuman
         await renderLatestNews();
         await renderAnnouncements();
+
+        // Render galeri
+    await renderGallery();
+    renderGalleryTabs();
         
         // Load bracket
         await renderBracketTabs();
@@ -3942,43 +4755,159 @@ function renderParticipationChart() {
 
 // ============================
 // GALLERY
-// ============================
+// ===========================
+
+async function renderGallery() {
+    const container = document.getElementById('galleryGrid');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="col-span-full text-center py-12">
+            <i class="fas fa-spinner fa-spin text-3xl text-red-600"></i>
+            <p class="mt-2 text-gray-500">Memuat galeri...</p>
+        </div>
+    `;
+    
+    try {
+        let gallery = await getGallery();
+        console.log('📸 Gallery to render:', gallery);
+        
+        if (currentGalleryCat !== 'all') {
+            gallery = gallery.filter(item => item.category === currentGalleryCat);
+        }
+        
+        const colors = ['from-red-500 to-red-700', 'from-blue-500 to-blue-700', 'from-green-500 to-green-700', 'from-yellow-500 to-yellow-700', 'from-purple-500 to-purple-700', 'from-pink-500 to-pink-700'];
+        const icons = ['fa-camera', 'fa-video', 'fa-image', 'fa-film', 'fa-star', 'fa-trophy'];
+        
+        if (!gallery || gallery.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <i class="fas fa-images text-4xl text-gray-400 mb-2"></i>
+                    <p class="text-gray-500">Belum ada foto di galeri</p>
+                    <p class="text-sm text-gray-400">Silakan tambah foto melalui Admin Panel</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Urutkan berdasarkan tanggal terbaru
+        const sortedGallery = [...gallery].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        container.innerHTML = sortedGallery.map((item, i) => {
+            let imageUrl = item.imageUrl || '';
+            
+            // Pastikan URL Imgur menggunakan https
+            if (imageUrl.startsWith('http://')) {
+                imageUrl = imageUrl.replace('http://', 'https://');
+            }
+            
+            return `
+                <div class="card-hover rounded-2xl overflow-hidden shadow-lg cursor-pointer group" 
+                     onclick="openGalleryModal('${item.id}', '${escapeHtml(item.title)}', '${imageUrl}')">
+                    <div class="image-placeholder bg-gradient-to-br ${colors[i % colors.length]} aspect-square flex items-center justify-center relative">
+                        <img src="${imageUrl}" 
+                             alt="${escapeHtml(item.title)}"
+                             class="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas ${icons[i % icons.length]}\\' style=\\'font-size:3rem;color:white;opacity:0.8\\'></i>'">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
+                            <i class="fas fa-search-plus text-white text-3xl opacity-0 group-hover:opacity-100 transition"></i>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-white dark:bg-gray-800">
+                        <h4 class="font-bold text-sm truncate">${escapeHtml(item.title)}</h4>
+                        <p class="text-xs text-gray-500 capitalize">${GALLERY_CATEGORIES[item.category] || item.category}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Error loading gallery:', error);
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-2"></i>
+                <p class="text-gray-500">Gagal memuat galeri</p>
+                <button onclick="renderGallery()" class="mt-2 text-red-600 underline">Coba lagi</button>
+            </div>
+        `;
+    }
+}
+
 function renderGalleryTabs() {
-    const cats = ['all','pembukaan','pertandingan','suporter','juara','malam'];
-    const labels = {all:'Semua',pembukaan:'Pembukaan',pertandingan:'Pertandingan',suporter:'Suporter',juara:'Juara',malam:'Malam Puncak'};
-    document.getElementById('galleryTabs').innerHTML = cats.map(c => `
-        <button onclick="setGalleryCat('${c}')" class="px-4 py-2 rounded-lg font-semibold text-sm transition ${currentGallery===c?'bg-red-600 text-white shadow-lg':'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-gray-700'}">
-            ${labels[c]}
+    const container = document.getElementById('galleryTabs');
+    if (!container) return;
+    
+    container.innerHTML = Object.entries(GALLERY_CATEGORIES).map(([key, label]) => `
+        <button onclick="setGalleryCat('${key}')" 
+                class="px-4 py-2 rounded-lg font-semibold text-sm transition 
+                ${currentGalleryCat === key ? 'bg-red-600 text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-gray-700'}">
+            ${label}
         </button>
     `).join('');
 }
 
-function setGalleryCat(c) {
-    currentGallery = c;
+function setGalleryCat(cat) {
+    currentGalleryCat = cat;
     renderGalleryTabs();
     renderGallery();
 }
 
-function renderGallery() {
-    const filtered = currentGallery === 'all' ? GALLERY : GALLERY.filter(g => g.cat === currentGallery);
-    const colors = ['from-red-500 to-red-700','from-blue-500 to-blue-700','from-green-500 to-green-700','from-yellow-500 to-yellow-700','from-purple-500 to-purple-700','from-pink-500 to-pink-700'];
-    const icons = ['fa-camera','fa-video','fa-image','fa-film','fa-star','fa-trophy'];
-    document.getElementById('galleryGrid').innerHTML = filtered.map((g,i) => `
-        <div class="card-hover rounded-2xl overflow-hidden shadow-lg cursor-pointer group">
-            <div class="image-placeholder bg-gradient-to-br ${colors[i%colors.length]} aspect-square flex items-center justify-center relative">
-                <i class="fas ${icons[i%icons.length]} text-6xl text-white/80 group-hover:scale-110 transition"></i>
-                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
-                    <i class="fas fa-search-plus text-white text-3xl opacity-0 group-hover:opacity-100 transition"></i>
-                </div>
-                <div class="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">${g.count} foto</div>
-            </div>
-            <div class="p-3 bg-white dark:bg-gray-800">
-                <h4 class="font-bold text-sm">${g.title}</h4>
-                <p class="text-xs text-gray-500 capitalize">${g.cat}</p>
+function openGalleryModal(id, title, imageUrl) {
+    let modal = document.getElementById('galleryModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'galleryModal';
+        modal.className = 'fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4';
+        modal.onclick = (e) => {
+            if (e.target === modal) closeGalleryModal();
+        };
+        document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+        <div class="relative max-w-4xl w-full">
+            <button onclick="closeGalleryModal()" class="absolute -top-10 right-0 text-white text-2xl hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+            <img src="${imageUrl}" alt="${escapeHtml(title)}" class="w-full rounded-lg shadow-2xl" onerror="this.src='https://placehold.co/800x600/gray/white?text=Image+Not+Found'">
+            <div class="text-center text-white mt-3">
+                <p class="font-bold">${escapeHtml(title)}</p>
             </div>
         </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeGalleryModal() {
+    const modal = document.getElementById('galleryModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function renderGalleryTabs() {
+    const container = document.getElementById('galleryTabs');
+    if (!container) return;
+    
+    container.innerHTML = Object.entries(GALLERY_CATEGORIES).map(([key, label]) => `
+        <button onclick="setGalleryCat('${key}')" 
+                class="px-4 py-2 rounded-lg font-semibold text-sm transition 
+                ${currentGalleryCat === key ? 'bg-red-600 text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-gray-700'}">
+            ${label}
+        </button>
     `).join('');
 }
+
 
 
 
